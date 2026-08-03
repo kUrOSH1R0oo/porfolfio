@@ -1,0 +1,9 @@
+{
+  "name": "kur0sh1r0-portfolio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static portfolio site with a folder-based, backend-free write-up and blog system.",
+  "scripts": {
+    "build": "node scripts/generate-manifest.js"
+  }
+}

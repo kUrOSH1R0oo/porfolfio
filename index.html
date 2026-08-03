@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fredmark Ivan &quot;Kur0sh1ro&quot; Dizon — security researcher, CTF player, and bug bounty hunter. HTB CPTS certified, A1SBERG member.">
+    <meta name="theme-color" content="#050807">
+    <meta property="og:title" content="Kur05h1r0's Portfolio">
+    <meta property="og:description" content="Portfolio of Fredmark Ivan Dizon: certifications, CTF achievements, offensive-security projects, and write-ups.">
+    <meta property="og:type" content="website">
+    <title>Portfolio</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="particles-js" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <a class="skip-link" href="#home">Skip to content</a>
+
+    <header>
+        <nav>
+            <a class="logo" href="#home"><span class="logo-bracket">[</span>Kur0Sh1r0<span class="logo-bracket">]</span></a>
+            <button class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-links">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#certifications">Certifications</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="writeups.html">Write-Ups</a></li>
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home">
+            <div class="hero">
+                <div class="terminal-window hero-terminal">
+                    <div class="terminal-titlebar">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                        <span class="terminal-path">kur0sh1ro@a1sberg:~$</span>
+                    </div>
+                    <div class="terminal-body">
+                        <p class="terminal-line"><span class="prompt">$</span> whoami</p>
+                        <h1 class="typewriter">Fredmark Ivan "Kur0sh1ro" Dizon</h1>
+                        <p class="terminal-line subtitle-line"><span class="prompt">$</span> cat roles.txt</p>
+                        <p class="subtitle">3rd Year BSIT Student · A1SBERG Member · CTF Player · Security Researcher · Bug Bounty Hunter</p>
+                        <div class="hero-actions">
+                            <a href="#projects" class="cta-button">Explore My Work</a>
+                            <a href="#certifications" class="cta-button cta-ghost">View Credentials</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="skills">
+            <div class="section-heading">
+                <span class="eyebrow">$ ls ~/skills</span>
+                <h2>Skills</h2>
+            </div>
+            <div class="skills-container">
+                <div class="skill-category">
+                    <h3>Programming Languages</h3>
+                    <ul>
+                        <li>Python</li>
+                        <li>C</li>
+                        <li>Ruby</li>
+                        <li>Go</li>
+                    </ul>
+                </div>
+                <div class="skill-category">
+                    <h3>Technical Skills</h3>
+                    <ul>
+                        <li>Offensive Security</li>
+                        <li>Malware Development</li>
+                        <li>Web Development</li>
+                    </ul>
+                </div>
+                <div class="skill-category">
+                    <h3>Others</h3>
+                    <ul>
+                        <li>Fluent in English and Filipino</li>
+                        <li>Semi-fluent in Japanese <span class="note">(everyday conversation, reads Hiragana/Katakana, basic grammar)</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="certifications">
+            <div class="section-heading">
+                <span class="eyebrow">$ cat credentials.log</span>
+                <h2>Certifications & Achievements</h2>
+            </div>
+            <div class="certifications-container">
+                <div class="certification-category">
+                    <h3>Certifications</h3>
+                    <div class="cert-scroll" id="certScroll">
+                        <div class="cert-badges">
+                            <button type="button" class="cert-badge" data-full="assets/CPTS.png" data-title="HTB Certified Penetration Testing Specialist" data-desc="Issued by Hack The Box for demonstrated professional-grade penetration testing skills.">
+                                <span class="cert-badge-frame">
+                                    <picture>
+                                        <img src="assets/CPTS.png" alt="HTB Certified Penetration Testing Specialist badge" loading="lazy" width="1491" height="1055">
+                                    </picture>
+                                </span>
+                                <span class="cert-badge-label">HTB Certified Penetration Testing Specialist</span>
+                                <span class="cert-badge-cta">View Certificate →</span>
+                            </button>
+                        </div>
+                        <div class="cert-badges">
+                            <button type="button" class="cert-badge" data-full="assets/CAPEEEE.png" data-title="HTB Certified Active Directory Pentesting Expert" data-desc="Issued by Hack The Box for demonstrated professional-grade Active Directory pentesting.">
+                                <span class="cert-badge-frame">
+                                    <picture>
+                                        <img src="assets/CAPEEEE.png" alt="HTB Certified Active Directory Pentesting Expert badge" loading="lazy" width="1148" height="808">
+                                    </picture>
+                                </span>
+                                <span class="cert-badge-label">HTB Certified Active Directory Pentesting Expert</span>
+                                <span class="cert-badge-cta">View Certificate →</span>
+                            </button>
+                        </div>
+                        <div class="cert-badges">
+                            <button type="button" class="cert-badge" data-full="assets/CWESSSS.png" data-title="HTB Certified Web Exploitation Specialist" data-desc="Issued by Hack The Box for demonstrated Bug Bounty worthy Web Pentesting.">
+                                <span class="cert-badge-frame">
+                                    <picture>
+                                        <img src="assets/CWESSSS.png" alt="HTB Certified Web Exploitation Specialist badge" loading="lazy" width="1148" height="808">
+                                    </picture>
+                                </span>
+                                <span class="cert-badge-label">HTB Certified Web Exploitation Specialist</span>
+                                <span class="cert-badge-cta">View Certificate →</span>
+                            </button>
+                        </div>
+                        <div class="cert-badges">
+                            <button type="button" class="cert-badge" data-full="assets/COAE.png" data-title="HTB Certified Offensive AI Expert" data-desc="Issued by Hack The Box for demonstrated Advanced AI Pentesting.">
+                                <span class="cert-badge-frame">
+                                    <picture>
+                                        <img src="assets/COAE.png" alt="HTB Certified Offensive AI Expert badge" loading="lazy" width="1148" height="808">
+                                    </picture>
+                                </span>
+                                <span class="cert-badge-label">HTB Certified Offensive AI Expert</span>
+                                <span class="cert-badge-cta">View Certificate →</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="certification-category">
+                    <h3>Achievements</h3>
+                    <ul>
+                        <li>Secured 2nd place in a Java Programming Competition at ACLC Skills Camp.</li>
+                        <li>Secured 120th place in HTB's University CTF. Solved 31/49 challenges.</li>
+                        <li>Ranked #1 in the Philippines on TryHackMe for the month.</li>
+                        <li>Ranked #112 in the Philippines on TryHackMe of all time.</li>
+                        <li>Champion in the SEEN CTF 2025.</li>
+                        <li>Ranked #2 in the Trend Micro uCTF 2025 Preliminaries.</li>
+                        <li>Ranked #3 in DECODE 2025 uCTF Finals.</li>
+                        <li>Champion in the Hack4Gov 2025 Regionals.</li>
+                        <li>Top 1 scorer in the Hack4Gov 2025 Regionals.</li>
+                        <li>Top 6 in the Hack4Gov 2025 Nationals.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <div class="section-heading">
+                <span class="eyebrow">$ ls ~/projects</span>
+                <h2>Projects</h2>
+            </div>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>Seclume</h3>
+                    <p>A robust, command-line file archiving tool designed for secure archiving, encryption, and compression of files and directories.</p>
+                    <a href="https://github.com/kUrOSH1R0oo/Seclume-Windows" class="project-link">View Project</a>
+                </div>
+                <div class="project-card">
+                    <h3>DarkJester</h3>
+                    <p>An advanced ransomware developed in Python, offering a wide range of capabilities that set it apart from typical ransomware.</p>
+                    <a href="https://github.com/kUrOSH1R0oo/DarkJester" class="project-link">View Project</a>
+                </div>
+                <div class="project-card">
+                    <h3>Asuka</h3>
+                    <p>A Python-based phishing framework built for educational and authorized security testing: clones a target site, hosts it locally, and captures credentials, session data, and user interactions.</p>
+                    <a href="https://github.com/kUrOSH1R0oo/Asuka" class="project-link">View Project</a>
+                </div>
+                <div class="project-card">
+                    <h3>Kiroku</h3>
+                    <p>A sophisticated keylogger designed for capturing and monitoring user activity on a target system, transmitting collected data to a remote server at regular intervals.</p>
+                    <a href="https://github.com/kUrOSH1R0oo/Kiroku" class="project-link">View Project</a>
+                </div>
+                <div class="project-card">
+                    <h3>Sokushi</h3>
+                    <p>A potent surveillance tool developed by A1SBERG that establishes a remote connection between a victim's system and the attacker's server.</p>
+                    <a href="https://github.com/kUrOSH1R0oo/Sokushi" class="project-link">View Project</a>
+                </div>
+                <div class="project-card">
+                    <h3>Eyrie</h3>
+                    <p>Eyrie is a comprehensive password management toolkit that allows secure storage, organization, and handling of sensitive credentials.</p>
+                    <a href="https://github.com/kUrOSH1R0oo/Eyrie" class="project-link">View Project</a>
+                </div>
+                <div class="project-card">
+                    <h3>Stealthy Reverse-Shell Attack In Memory C# Beaconing</h3>
+                    <p>This attack implements a stealthy reverse shell mechanism designed to establish persistent, intermittent command-and-control (C2) communications between a compromised Windows host and an attacker's server.</p>
+                    <a href="https://github.com/kUrOSH1R0oo/Stealthy-Reverse-Shell-Attack-In-Memory-C-Sharp-Beaconing" class="project-link">View Project</a>
+                </div>
+                <div class="project-card">
+                    <h3>Halo</h3>
+                    <p>Halo is a lightweight, fully automated file organizer for Windows. It dynamically sorts your files based on their extensions, keeping your Downloads, Documents, Pictures, Music, and Videos folders clean and organized — all without manual intervention.</p>
+                    <a href="https://github.com/kUrOSH1R0oo/Halo" class="project-link">View Project</a>
+                </div>
+                <div class="project-card">
+                    <h3>YoloScript</h3>
+                    <p>YoloScript is a meme-flavored, interpreted programming language written in C++. Every keyword is pulled straight from internet slang — yolo declares a variable, sendit prints output, bruh is your if, and fr opens a block. It's silly on the surface, but underneath sits a real tree-walk interpreter with a surprising feature set: first-class functions, arrays, floats, string builtins, a for-loop, and — its most distinctive trick — a Mood Engine that changes how arithmetic behaves at runtime.</p>
+                    <a href="https://github.com/kUrOSH1R0oo/YoloScript" class="project-link">View Project</a>
+                </div>
+            </div>
+            <div class="view-more">
+                <a href="https://github.com/kUrOSH1R0oo" class="view-more-link">View More on GitHub</a>
+            </div>
+        </section>
+
+        <section id="contact">
+            <div class="section-heading">
+                <span class="eyebrow">$ mail --compose</span>
+                <h2>Contact</h2>
+            </div>
+            <div class="contact-info">
+                <div class="contact-card">
+                    <div class="contact-row">
+                        <span class="contact-label">Email</span>
+                        <a href="mailto:fredmarkivand@gmail.com">fredmarkivand@gmail.com</a>
+                    </div>
+                    <div class="contact-row">
+                        <span class="contact-label">GitHub</span>
+                        <a href="https://github.com/kUrOSH1R0oo" target="_blank" rel="noopener noreferrer">github.com/kUrOSH1R0oo</a>
+                    </div>
+                    <div class="contact-row">
+                        <span class="contact-label">LinkedIn</span>
+                        <a href="https://www.linkedin.com/in/fredmark-ivan-dizon-a61b8b301" target="_blank" rel="noopener noreferrer">linkedin.com/fredmark-ivan-dizon</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>They know the name, not the face. — Kur0sh1ro, 2026</p>
+    </footer>
+
+    <button type="button" class="to-top" id="toTop" aria-label="Back to top">↑</button>
+
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="lightboxTitle">
+        <div class="lightbox-backdrop" data-close></div>
+        <div class="lightbox-content">
+            <button type="button" class="lightbox-close" data-close aria-label="Close credential viewer">✕</button>
+            <img id="lightboxImg" src="" alt="">
+            <div class="lightbox-caption">
+                <h3 id="lightboxTitle"></h3>
+                <p id="lightboxDesc"></p>
+                <a id="lightboxDownload" href="#" download class="lightbox-download">Open Full Image ↗</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

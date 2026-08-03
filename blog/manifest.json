@@ -1,0 +1,15 @@
+[
+  {
+    "slug": "example-post",
+    "file": "example-post.md",
+    "title": "How This Blog System Works",
+    "date": "2026-01-10",
+    "excerpt": "A quick placeholder post explaining the folder-based, backend-free blog/write-up system.",
+    "cover": "../uploads/placeholder-cover.svg",
+    "category": "",
+    "tags": [
+      "meta",
+      "site-update"
+    ]
+  }
+]

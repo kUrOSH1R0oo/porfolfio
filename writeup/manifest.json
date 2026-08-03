@@ -1,0 +1,58 @@
+[
+  {
+    "slug": "example-b2r",
+    "file": "example-b2r.md",
+    "title": "Example B2R Box — Placeholder",
+    "date": "2026-01-15",
+    "excerpt": "A placeholder Boot2Root write-up demonstrating category grouping and code blocks.",
+    "cover": "",
+    "category": "B2R",
+    "tags": [
+      "htb",
+      "linux",
+      "privesc"
+    ]
+  },
+  {
+    "slug": "example-jeopardy",
+    "file": "example-jeopardy.md",
+    "title": "Example Jeopardy Challenge — Placeholder",
+    "date": "2026-01-12",
+    "excerpt": "A placeholder CTF Jeopardy-style write-up demonstrating category grouping.",
+    "cover": "",
+    "category": "Jeopardy",
+    "tags": [
+      "ctf",
+      "crypto",
+      "pwn"
+    ]
+  },
+  {
+    "slug": "example-linux",
+    "file": "example-linux.md",
+    "title": "Example Linux Box — Placeholder",
+    "date": "2026-01-08",
+    "excerpt": "A placeholder Linux target write-up demonstrating category grouping.",
+    "cover": "",
+    "category": "Linux",
+    "tags": [
+      "linux",
+      "htb",
+      "tryhackme"
+    ]
+  },
+  {
+    "slug": "example-windows",
+    "file": "example-windows.md",
+    "title": "Example Windows Box — Placeholder",
+    "date": "2026-01-05",
+    "excerpt": "A placeholder Windows target write-up demonstrating category grouping.",
+    "cover": "",
+    "category": "Windows",
+    "tags": [
+      "windows",
+      "ad",
+      "htb"
+    ]
+  }
+]
