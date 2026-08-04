@@ -14,8 +14,6 @@ By the end of this writeup, you should have a clear idea of how the challenge wa
 
 Let's start!
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F9Z5EZ4ocbg1XBfMD7vQm%252Fanime-girl-with-lollipop-38khp402fgob986g.gif%3Falt%3Dmedia%26token%3D537057bd-943a-4d12-b149-1cd3182848bc&width=768&dpr=3&quality=100&sign=dde0ef71&sv=2)
-
 ## Reconnaissance
 
 First, we begin by scanning the target for any open ports that could serve as potential entry points. To do this, we use `Nmap` to identify exposed services and gather initial information about the system.
