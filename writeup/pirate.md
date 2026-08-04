@@ -6,8 +6,6 @@ cover: ../uploads/cover_pirate.jpg
 tags: NTLM Relay, Kerberos Delegation, Pre2k Abuse, Forging Service Ticket
 ---
 
-# HackTheBox Pirate— Writeup
-
 Welcome back to another Hack The Box writeup! In this walkthrough, we will be taking on **Pirate**, an Active Directory-focused machine that challenges players to demonstrate a wide range of enumeration, privilege escalation, and post-exploitation techniques. Throughout this engagement, we will systematically identify attack paths, analyze the environment, and leverage misconfigurations to gain deeper access into the domain. This machine highlights the importance of thorough enumeration, understanding Active Directory fundamentals, and effectively chaining multiple findings together to achieve full compromise.
 
 ![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fi5DquSb5fvJEB5XLD7Sx%252F200.gif%3Falt%3Dmedia%26token%3D72508af4-ebc1-432e-bc62-669ea93d6d50&width=768&dpr=3&quality=100&sign=529a953a&sv=2)
