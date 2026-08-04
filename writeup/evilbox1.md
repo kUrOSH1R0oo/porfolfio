@@ -1,5 +1,5 @@
 ---
-title: EvilBox: 1
+title: "EvilBox: 1"
 date: 05-04-2024
 excerpt: VulnHub
 cover: ../uploads/cover_evilbox.jpg
