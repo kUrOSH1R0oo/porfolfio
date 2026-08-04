@@ -2,7 +2,7 @@
 title: "EvilBox: 1"
 date: 05-04-2024
 excerpt: VulnHub
-cover: ../uploads/cover_evilbox.jpg
+cover: ../uploads/cover_evilbox1.jpg
 tags: local-file-inclusion, ssh-key-cracking, writable-etc-passwd, privilege-escalation
 ---
 
