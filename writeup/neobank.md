@@ -6,8 +6,6 @@ cover: ../uploads/cover_neobank.jpg
 tags: Broken Authentication, 2FA Bypass, IDOR, Remote Code Execution, Privilege Escalation
 ---
 
-# Neobank: 1 BOOT2ROOT CTF VULNHUB WRITEUP
-
 Welcome to my writeup on the *Neobank* machine from VulnHub. In this walkthrough, I will document the entire exploitation process as if conducting a formal penetration test. The objective is to simulate a real-world assessment by identifying and leveraging vulnerabilities to gain root access on the target system. This includes a structured approach involving initial reconnaissance, enumeration, exploitation, and privilege escalation. All steps are outlined clearly, supported with relevant tools and commands used during the engagement. This writeup aims not only to showcase the methodology but also to reinforce key principles in offensive security.
 
 ![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FSa2bzu6YS6Zx4MkRGHe9%252F51ede97854c68d115c097abc3c074ddb.gif%3Falt%3Dmedia%26token%3D8acdf752-f40b-4086-bc51-fc75d73777c4&width=768&dpr=3&quality=100&sign=ec420fd2&sv=2)
