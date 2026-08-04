@@ -39,6 +39,63 @@
         return match ? match[1] : raw;
     }
 
+    // --- LaTeX (GitHub-style $...$ / $$...$$) support -----------------
+    // Markdown itself would mangle raw LaTeX (underscores -> <em>, etc.),
+    // so math is pulled out into placeholders *before* marked.parse runs,
+    // then swapped back in as KaTeX-rendered HTML *after* marked.parse
+    // runs (right before DOMPurify sanitizes the final markup).
+
+    function protectMath(text, store) {
+        // Block math: $$ ... $$ (can span multiple lines)
+        text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, expr) => {
+            const idx = store.length;
+            store.push({ expr: expr.trim(), display: true });
+            return `\u0000MATH${idx}\u0000`;
+        });
+        // Inline math: $...$ — require no whitespace touching the $ signs
+        // so things like "costs $5 or $10" are left alone.
+        text = text.replace(/\$(?!\s)([^\n$]+?)(?<!\s)\$/g, (_, expr) => {
+            const idx = store.length;
+            store.push({ expr: expr.trim(), display: false });
+            return `\u0000MATH${idx}\u0000`;
+        });
+        return text;
+    }
+
+    function protectMathOutsideCode(raw) {
+        // Skip fenced code blocks and inline code spans so $ inside code
+        // is never mistaken for math.
+        const store = [];
+        const re = /(```[\s\S]*?```|`[^`\n]+`)/g;
+        let lastIndex = 0;
+        let out = '';
+        let m;
+        while ((m = re.exec(raw)) !== null) {
+            out += protectMath(raw.slice(lastIndex, m.index), store);
+            out += m[0];
+            lastIndex = re.lastIndex;
+        }
+        out += protectMath(raw.slice(lastIndex), store);
+        return { text: out, store };
+    }
+
+    function renderMathPlaceholders(html, store) {
+        return html.replace(/\u0000MATH(\d+)\u0000/g, (full, idxStr) => {
+            const item = store[Number(idxStr)];
+            if (!item) return full;
+            if (!window.katex) return escapeHtml(item.expr);
+            try {
+                return window.katex.renderToString(item.expr, {
+                    displayMode: item.display,
+                    throwOnError: false,
+                    output: 'html'
+                });
+            } catch (err) {
+                return `<span class="math-error">${escapeHtml(item.expr)}</span>`;
+            }
+        });
+    }
+
     function showError(message) {
         if (els.body) {
             els.body.innerHTML = `<p class="entry-error">${escapeHtml(message)}</p>`;
@@ -173,7 +230,9 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const raw = await res.text();
             const body = stripFrontMatter(raw);
-            const html = window.marked ? window.marked.parse(body) : escapeHtml(body);
+            const { text: bodyWithPlaceholders, store: mathStore } = protectMathOutsideCode(body);
+            let html = window.marked ? window.marked.parse(bodyWithPlaceholders) : escapeHtml(bodyWithPlaceholders);
+            html = renderMathPlaceholders(html, mathStore);
             if (els.body) {
                 els.body.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(html) : html;
             }
