@@ -14,8 +14,6 @@ Throughout this writeup, I'll document my entire thought process, methodology, a
 
 If you're looking to sharpen your AD penetration testing skills or prepare for advanced certifications and labs, I hope this walkthrough provides valuable insights. Let's dive into Hercules and see what it takes to conquer one of Hack The Box's toughest machines.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FdhROLXPNIfJQfsKtId3i%252Fanime-girl-starting-chainsaw-fdwqign4icddpoij.gif%3Falt%3Dmedia%26token%3D8c128bf9-9ec5-48c5-96fe-4b7a61326a10&width=768&dpr=3&quality=100&sign=ba27bbf8&sv=2)
-
 ## Recon
 
 I began the reconnaissance process by performing a thorough `Nmap` scan on the target host to discover open ports, identify active services, and uncover potential entry points for further assessment:
