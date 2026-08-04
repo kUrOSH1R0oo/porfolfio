@@ -6,8 +6,6 @@ cover: ../uploads/cover_pwnthetron.jpg
 tags: CSRF, Directory Traversal, RCE
 ---
 
-# Pwn The Tron: BOOT2ROOT CTF VULNHUB WRITEUP
-
 Hello, everyone! Welcome to my very first write-up. Today, I’m excited to share how I successfully tackled and completed the **Pwn the Tron** challenge from Vulnhub. This write-up is a detailed walkthrough of my approach, and I hope it provides you with valuable insights and enhances your understanding of the process. Let’s dive right in and get started!
 
 ## Reconnaissance
