@@ -6,8 +6,6 @@ cover: ../uploads/cover_hercules.jpg
 tags: RBCD Abuse, S4U2Self, S4U2Proxy, ADCS, PKINIT
 ---
 
-# HackTheBox Hercules— Writeup
-
 Welcome back to another Hack The Box writeup! In this walkthrough, I'll be tackling one of the platform's most challenging machines **Hercules**, an Insane-rated box that puts your offensive security methodology to the test.
 
 Unlike machines that rely on a single vulnerability or straightforward exploitation, Hercules is heavily centered around a complex **Active Directory** environment. Successfully compromising the domain requires strong enumeration, careful privilege escalation, and a deep understanding of Windows internals, authentication mechanisms, and AD attack paths. Missing even a small detail during enumeration can easily lead to dead ends.
