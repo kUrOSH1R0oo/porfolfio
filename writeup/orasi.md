@@ -6,8 +6,6 @@ cover: ../uploads/cover_orasi.jpg
 tags: reverse-engineering, SSTI, filter-bypass, apk-reversing
 ---
 
-# Orasi: BOOT2ROOT CTF VULNHUB WRITEUP
-
 Welcome back to another writeup! In this post, I'll be walking you through how I managed to pwn **Orasi** — a machine available on VulnHub. While **Orasi** has a reputation for being a tough box according to many in the community, I personally found it to be more approachable than expected once I broke it down step-by-step. Throughout this guide, I'll show you exactly how I tackled it. Let's dive in!!
 
 ---
