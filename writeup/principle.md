@@ -10,8 +10,6 @@ Welcome back to my write-up. In this post, I’ll walk you through a clear, step
 
 Let's start
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fbb0KjmKQVnpAtNpK7abu%252Fgiphy-downsized-large.gif%3Falt%3Dmedia%26token%3D3dc712dd-a93c-431e-97f1-af29b8b5f2dc&width=768&dpr=3&quality=100&sign=1ecd20bf&sv=2)
-
 ## Reconnaissance
 
 Now, let’s begin by scanning the open ports using `Nmap` to identify possible entry points into the target system.
