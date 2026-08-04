@@ -14,8 +14,6 @@ This writeup is meant to be both a learning guide and a personal note for myself
 
 Let’s dive in!
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F6Co1C8VpOyHyhSHCyO1w%252Ftumblr_mobt4fw9JX1s9m4lro1_500.gif%3Falt%3Dmedia%26token%3D86002bc6-6343-47b9-b94b-96756b1b2455&width=768&dpr=3&quality=100&sign=81c3f179&sv=2)
-
 ## Reconnaissance
 
 Let’s start by scanning for open ports using `Nmap` to identify possible entry points and potential attack paths:
