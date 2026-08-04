@@ -6,8 +6,6 @@ cover: ../uploads/cover_pterodactyl.jpg
 tags: CVE-2025-49132, CVE-2025-6018, CVE-2025-6019
 ---
 
-# HackTheBox Pterodactyl— Writeup
-
 Welcome back to my writeup. In today’s post, I’ll walk you through a step-by-step breakdown of how I solved **Pterodactyl** from Hack The Box Labs.
 
 This machine was a great learning experience, especially in understanding how different components of the system interact and how small misconfigurations can lead to meaningful exploitation paths. I’ll go through my full thought process, from initial enumeration, identifying potential attack surfaces, all the way to gaining a working solution. Along the way, I’ll also highlight key observations and techniques that helped me move forward whenever I got stuck.
