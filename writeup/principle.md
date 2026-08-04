@@ -6,8 +6,6 @@ cover: ../uploads/cover_principle.jpg
 tags: CVE-2026-29000
 ---
 
-# HackTheBox Principal— Writeup
-
 Welcome back to my write-up. In this post, I’ll walk you through a clear, step-by-step breakdown of how I solved one of the recently retired machine on Hack The Box, Principal. I’ll go through my thought process from initial enumeration to the final exploitation, highlighting the key findings, techniques, and decisions along the way. Whether you’re following along to learn or just curious about the approach, this guide should help you understand how each stage of the challenge was tackled and how everything eventually came together to achieve the root flag.
 
 Let's start
