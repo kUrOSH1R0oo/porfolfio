@@ -6,8 +6,6 @@ cover: ../uploads/cover_garfield.jpg
 tags: RBCD Abuse, Key List Attack, Forging RODC Golden Ticket
 ---
 
-# HackTheBox Garfield— Writeup
-
 Welcome back to another writeup! In this walkthrough, I'll be covering my approach to solving **Garfield** from Hack The Box. This machine is primarily focused on **Active Directory exploitation**, requiring a combination of enumeration, privilege escalation, and post-exploitation techniques to progress through the environment. Throughout this writeup, I'll break down the methodology I used, explain the reasoning behind each step, and highlight the tools and techniques that proved useful along the way. Rather than simply presenting commands, I'll also discuss the thought process behind the attack path so that readers can better understand how to approach similar Active Directory scenarios in real-world assessments and CTF environments.
 
 ![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FPHxSLFhK8HSbuNd06lGR%252Fharuhi-suzumiya-anime.gif%3Falt%3Dmedia%26token%3Da4b1d0a0-5497-4c66-ac45-59889a7fb57b&width=768&dpr=3&quality=100&sign=fcf932ed&sv=2)
