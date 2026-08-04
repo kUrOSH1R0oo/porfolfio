@@ -6,8 +6,6 @@ cover: ../uploads/cover_snapped.jpg
 tags: CVE-2026-27944, CVE-2026-3888
 ---
 
-#HackTheBox Snapped— Writeup
-
 This is actually my first time documenting a HackTheBox machine, and I’ll be honest, HTB feels a lot more challenging compared to other platforms I’ve tried xD. The difficulty curve is definitely steeper, but that’s also what makes it fun and rewarding when things finally click.
 
 In this post, I’ll walk through how I approached and solved the retired hard HTB machine **Snapped**. I’ll break down my thought process, the steps I took during enumeration and exploitation, and the key lessons I picked up along the way.
