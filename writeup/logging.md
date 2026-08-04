@@ -6,8 +6,6 @@ cover: ../uploads/cover_logging.jpg
 tags: DLL Hijacking, ADCS Exploitation, WSUS Server Impersonation
 ---
 
-# HackTheBox Logging— Writeup
-
 Welcome back to another Hack The Box writeup. In this walkthrough, we will be tackling **Logging**, a Medium-difficulty Active Directory machine that combines Windows enumeration, privilege escalation, and domain exploitation techniques.
 
 This machine provides an excellent opportunity to practice identifying attack paths within an Active Directory environment, understanding common misconfigurations, and leveraging them to gain higher levels of access. Throughout this writeup, I will cover the enumeration process, the methodology used to uncover vulnerabilities, and the steps required to achieve full compromise of the target.
