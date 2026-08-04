@@ -12,8 +12,6 @@ This machine provides an excellent opportunity to practice identifying attack pa
 
 By the end of this challenge, we will have explored several real-world attack techniques that are frequently encountered during penetration tests and security assessments, making Logging a valuable learning experience for anyone looking to strengthen their Active Directory exploitation skills.
 
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FICLj903E5QS8tkHSVzTY%252F221983.gif%3Falt%3Dmedia%26token%3D2baf3dc2-39be-417e-9dc4-cf8a76f80bad&width=768&dpr=3&quality=100&sign=9d946020&sv=2)
-
 We will start by scanning the open ports of the target using `nmap`:
 
 ```shell
