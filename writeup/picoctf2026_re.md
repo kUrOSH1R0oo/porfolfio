@@ -634,125 +634,19 @@ The program calls `decode_password(password)` at the very beginning of `main`. B
 
 The challenge encourage us to use `LLDB` but we can solve this using static analysis, look at the `decode_password` function carefully, we see a simple XOR cipher. Every byte in the `enc` array is XORed with the hex value `0xaa`.
 
-**Index**
-
-**Enc Value (Hex)**
-
-**XOR Key**
-
-**Result (Hex)**
-
-**ASCII Character**
-
-0
-
-`0xf9`
-
-`0xaa`
-
-`0x53`
-
-S
-
-1
-
-`0xdf`
-
-`0xaa`
-
-`0x75`
-
-u
-
-2
-
-`0xda`
-
-`0xaa`
-
-`0x70`
-
-p
-
-3
-
-`0xcf`
-
-`0xaa`
-
-`0x65`
-
-e
-
-4
-
-`0xd8`
-
-`0xaa`
-
-`0x72`
-
-r
-
-5
-
-`0xf9`
-
-`0xaa`
-
-`0x53`
-
-S
-
-6
-
-`0xcf`
-
-`0xaa`
-
-`0x65`
-
-e
-
-7
-
-`0xc9`
-
-`0xaa`
-
-`0x63`
-
-c
-
-8
-
-`0xdf`
-
-`0xaa`
-
-`0x75`
-
-u
-
-9
-
-`0xd8`
-
-`0xaa`
-
-`0x72`
-
-r
-
-10
-
-`0xcf`
-
-`0xaa`
-
-`0x65`
-
-e
+| Index | Enc Value (Hex) | XOR Key | Result (Hex) | ASCII Character |
+|-------|----------------|----------|--------------|-----------------|
+| 0 | 0xf9 | 0xaa | 0x53 | S |
+| 1 | 0xdf | 0xaa | 0x75 | u |
+| 2 | 0xda | 0xaa | 0x70 | p |
+| 3 | 0xcf | 0xaa | 0x65 | e |
+| 4 | 0xd8 | 0xaa | 0x72 | r |
+| 5 | 0xf9 | 0xaa | 0x53 | S |
+| 6 | 0xcf | 0xaa | 0x65 | e |
+| 7 | 0xc9 | 0xaa | 0x63 | c |
+| 8 | 0xdf | 0xaa | 0x75 | u |
+| 9 | 0xd8 | 0xaa | 0x72 | r |
+| 10 | 0xcf | 0xaa | 0x65 | e |
 
 The decoded password is: `SuperSecure`
 
