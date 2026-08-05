@@ -588,13 +588,13 @@ To recover the plaintext difference, the linear transformation must be reversed.
 Since the cipher is linear, reversing the rounds with a zero key correctly computes:
 
 $$
-\text{pt\\_diff} = \text{pt}\_1 \oplus \text{flag}
+pt_{\text{diff}} = pt_1 \oplus flag
 $$
 
 Once the plaintext difference is known, recovering the flag is trivial:
 
 $$
-\text{flag} = \text{pt}\_1 \oplus \text{pt\\_diff}
+flag = pt_1 \oplus pt_{\text{diff}}
 $$
 
 This is implemented in the final step of the script:
