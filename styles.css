@@ -1391,6 +1391,34 @@ footer {
     background: none !important;
 }
 
+/* KaTeX: block math scrolls horizontally instead of overflowing the
+   article column; inline math is allowed to shrink/wrap so long
+   expressions in a normal paragraph don't blow out the layout. */
+.entry-body .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+    padding: 4px 0 10px;
+    margin: 0 0 20px;
+}
+
+.entry-body .katex-display > .katex {
+    white-space: normal;
+}
+
+.entry-body .katex {
+    max-width: 100%;
+    font-size: 1em;
+}
+
+.entry-body p .katex {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: middle;
+}
+
 .entry-body blockquote {
     margin: 0 0 18px;
     padding: 10px 18px;
