@@ -447,13 +447,13 @@ ct2 = 8c7d66558130eb5796d131beb43c9934
 Since the cipher is linear, XORing two ciphertexts cancels the key contribution:
 
 $$
-E\_k(a) \oplus E\_k(b) = L(a \oplus b)
+E_k(a) \oplus E_k(b) = L(a \oplus b)
 $$
 
 Applying this to the given values:
 
 $$
-\text{ct}\_1 \oplus \text{ct}\_2 = L(\text{pt}\_1 \oplus \text{flag})
+ct_1 \oplus ct_2 = L(pt_1 \oplus flag)
 $$
 
 This means the result of XORing the ciphertexts is simply the linear transformation applied to the XOR of the plaintexts, with no key involved.
