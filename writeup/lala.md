@@ -1,9 +1,9 @@
 ---
-title: "picoctf"
-date: 07-26-2024
-excerpt: VulnHub
-cover: ../uploads/cover_driftingblues4.jpg
-tags: bruteforce, crontab privesc
+title: "PicoCTF 2026: Cryptography"
+date: 03-20-2026
+excerpt: PicoCTF 2026 Writeup
+cover: ../uploads/cover_picocrypto.jpg
+tags: LFSR, AES, Diffie-Hellman, linear transformation, Franklin-Reiter, LLL, NTRU
 ---
 
 Good day, everyone! Today, I’ll be walking you through the challenges I’ve successfully solved in the Cryptography category of picoCTF 2026!
@@ -196,13 +196,13 @@ From the hint: *What do you get if you combine a public key with a known private
 This means **we know** `b` **(client’s secret)**. Using that, we can compute the shared secret as:
 
 $$
-shared=Ab mod p\text{shared} = A^b \bmod pshared=Abmodp
+\text{shared} = A^b \bmod p
 $$
 
 Then, the encryption/decryption is just a simple XOR of each byte of the message with the last 8 bits of the shared secret:
 
 $$
-flag=bytes([ x⊕(shared mod 256)  for x in enc ])\text{flag} = \text{bytes}\Big([\, x \oplus (\text{shared} \bmod 256) \;\text{for } x \text{ in enc} \,]\Big)flag=bytes([x⊕(sharedmod256)for x in enc])
+flag=bytes([ x⊕(shared mod 256)  for x in enc ])
 $$
 
 Here's the solution for this:
@@ -431,7 +431,7 @@ In real AES, these functions introduce non-linearity through the Substitution bo
 Because all remaining operations are linear, the encryption function can be written in the form:
 
 $$
-Ek(x)=L(x)⊕K′E\_k(x) = L(x) \oplus K'Ek​(x)=L(x)⊕K′
+E\_k(x) = L(x) \oplus K'
 $$
 
 where L is a linear transformation and K′ is a constant derived from the key. This property makes the cipher vulnerable to known-plaintext attacks.
@@ -447,13 +447,13 @@ ct2 = 8c7d66558130eb5796d131beb43c9934
 Since the cipher is linear, XORing two ciphertexts cancels the key contribution:
 
 $$
-Ek(a)⊕Ek(b)=L(a⊕b)E\_k(a) \oplus E\_k(b) = L(a \oplus b)Ek​(a)⊕Ek​(b)=L(a⊕b)
+E\_k(a) \oplus E\_k(b) = L(a \oplus b)
 $$
 
 Applying this to the given values:
 
 $$
-ct1⊕ct2=L(pt1⊕flag)\text{ct}\_1 \oplus \text{ct}\_2 = L(\text{pt}\_1 \oplus \text{flag})ct1​⊕ct2​=L(pt1​⊕flag)
+\text{ct}\_1 \oplus \text{ct}\_2 = L(\text{pt}\_1 \oplus \text{flag})
 $$
 
 This means the result of XORing the ciphertexts is simply the linear transformation applied to the XOR of the plaintexts, with no key involved.
@@ -588,13 +588,13 @@ To recover the plaintext difference, the linear transformation must be reversed.
 Since the cipher is linear, reversing the rounds with a zero key correctly computes:
 
 $$
-pt\_diff=pt1⊕flag\text{pt\\_diff} = \text{pt}\_1 \oplus \text{flag}pt\_diff=pt1​⊕flag
+\text{pt\\_diff} = \text{pt}\_1 \oplus \text{flag}
 $$
 
 Once the plaintext difference is known, recovering the flag is trivial:
 
 $$
-flag=pt1⊕pt\_diff\text{flag} = \text{pt}\_1 \oplus \text{pt\\_diff}flag=pt1​⊕pt\_diff
+\text{flag} = \text{pt}\_1 \oplus \text{pt\\_diff}
 $$
 
 This is implemented in the final step of the script:
@@ -647,16 +647,61 @@ print(N)
 
 This challenge is a classic application of the **Franklin-Reiter Related Message Attack**.
 
-Since we have two ciphertexts C1​ and C2​ where the plaintexts M1​ and M​2​ are related by a known linear function M_1 = M_2 + \Delta, we can recover the original message without knowing the private key ddd.
+Since we have two ciphertexts C1​ and C2​ where the plaintexts M1​ and M​2​ are related by a known linear function 
 
-We have two equations in the ring ZN​[x]ZN​[x]ZN​[x]:
+$$
+M_1 = M_2 + \Delta
+$$
 
-1. f1​(x)=xe−C1​=0(modN)f1​(x)=xe−C1​=0(modN)f1​(x)=xe−C1​=0(modN)
-2. f2​(x)=(x+Δ)e−C2​=0(modN)f2​(x)=(x+Δ)e−C2​=0(modN)f2​(x)=(x+Δ)e−C2​=0(modN)
+We can recover the original message without knowing the private key d.
 
-Both polynomials share a common root, which is M2​M2​M2​. By calculating the Greatest Common Divisor (GCD) of these two polynomials in SageMath, the resulting polynomial will be (x−M2​)(x−M2​)(x−M2​), revealing the message.
+We have two equations in the ring ZN​[x]:
+
+1. $$f_1(x) = x^e - C_1 \equiv 0 \pmod{N}$$
+2. $$f_2(x) = (x + \Delta)^e - C_2 \equiv 0 \pmod{N}$$
+
+Both polynomials share a common root, which is M2​. By calculating the Greatest Common Divisor (GCD) of these two polynomials in SageMath, the resulting polynomial will be (x-M2), revealing the message.
 
 We will need [SageCellServer](https://sagecell.sagemath.org/) for this challenge, here's the solution:
+
+```python
+C1 = 3486364849772584627692611749053367200656673358261596068549224442954489368512244047032432842601611650021333218776410522726164792063436874469202000304563253268152374424792827960027328885841727753251809392141585739745846369791063025294100126955644910200403110681150821499366083662061254649865214441429600114378725559898580136692467180690994656443588872905046189428367989340123522629103558929469463071363053880181844717260809141934586548192492448820075030490705363082025344843861901475648208157572346004443100461870519699021342998731173352225724445397168276113254405106732294978648428026500248591322675321980719576323749
+C2 = 201982790559548563915678784397933493721879152787419243871599124287434576744055997870874349538398878336345269929647585648144070475012256331468688792105087899416655051702630953882466457932737483198442642588375981620937494661378586614008496182135571457352400128892078765628319466855732569272509655562943410536265866312968101366413636251672211633011159836642751480632253423529271185888171036917413867011031963618529122680143291205470937752671602494831117301480813590683791618751348224964277861127486155552153012612562009905595646626759034581358425916638671884927506025703373056113307665093346439014722219878575598308124
+diff = -3
+N = 17334845546772507565250479697360218105827285681719530148909779921509619103084219698006014339278818598859177686131922807448182102049966121282308256054696565796008642900453901629937223685292142986689576464581496406676552201407729209985216274086331582917892470955265888718120511814944341755263650688063926284195007148056359887333784052944201212155189546062807573959105963160320187551755272391293705288576724811668369745107148481856135696249862795476376097454818009481550162364943945249601744881676746859305855091288055082626399929893610275614840617858985993338556889612804266896309310999363054134373435198031731045253881
+e = 0x11
+
+def franklin_reiter(C1, C2, diff, e, N):
+    # Create the polynomial ring over integers modulo N
+    P.<x> = PolynomialRing(Zmod(N))
+    
+    # We define two polynomials that share a common root (the message)
+    # Since Message = Message_fixed + diff
+    # f1(x) = (x + diff)^e - C1 
+    # f2(x) = x^e - C2
+    f1 = (x + diff)^e - C1
+    f2 = x^e - C2
+    
+    # Simple Euclidean Algorithm for polynomials in Zmod(N)
+    def poly_gcd(a, b):
+        while b:
+            a, b = b, a % b
+        return a.monic()
+
+    common_root_poly = poly_gcd(f1, f2)
+    
+    # The result is (x - m), so m = -constant_term
+    return -common_root_poly.coefficients()[0]
+
+# Execute attack
+message_fixed_long = franklin_reiter(C1, C2, diff, e, N)
+
+# Convert integer to bytes manually (Sage style)
+m_int = Integer(message_fixed_long)
+hex_val = hex(m_int)[2:]
+if len(hex_val) % 2 != 0: hex_val = '0' + hex_val
+print("Flag:", bytes.fromhex(hex_val).decode('utf-8', 'ignore'))
+```
 
 Here's the output:
 
@@ -668,8 +713,42 @@ For this challenge, we are given a 2 files called `chall.py` and `output.txt`:
 
 Let's check the `output.txt`:
 
+```text
+21c1b705764e4bfdafd01e0bfdbc38d5eadf92991cdd347064e37444e517d661cea9
+```
+
 Now let's check the `chall.py`:
 
+```python
+from Crypto.Util.number import bytes_to_long, long_to_bytes
+from Crypto.Random import get_random_bytes
+
+key = bytes_to_long(get_random_bytes(126))
+
+def steplfsr(lfsr):
+    b7 = (lfsr >> 7) & 1
+    b5 = (lfsr >> 5) & 1
+    b4 = (lfsr >> 4) & 1
+    b3 = (lfsr >> 3) & 1
+
+    feedback = b7 ^ b5 ^ b4 ^ b3
+    lfsr = (feedback << 7) | (lfsr >> 1)
+    return lfsr
+
+def encrypt_lfsr(pt_bytes):
+    output = bytearray()
+    lfsr = key & 0xFF
+    for p in pt_bytes:
+        lfsr = steplfsr(lfsr)
+        ks = lfsr
+        output.append(p ^ ks)
+    return bytes_to_long(bytes(output))
+
+pt = b"[redacted]"
+ct = encrypt_lfsr(pt)
+
+print(long_to_bytes(ct).hex())
+```
 This is a classic Linear Feedback Shift Register (LFSR) challenge. We have the ciphertext and the encryption logic, but the `key` (and specifically the initial `lfsr` state) is missing.
 
 The good news? This specific LFSR is only 8 bits wide (it masks the key with `0xFF`), which means there are only 256 possible starting states. This is small enough to solve with a brute-force attack in a fraction of a second.
@@ -682,6 +761,39 @@ In the `encrypt_lfsr` function, the initial state of the LFSR is derived from `k
 
 Here's the solution for this challenge:
 
+```python
+from Crypto.Util.number import long_to_bytes
+
+ct_hex = "21c1b705764e4bfdafd01e0bfdbc38d5eadf92991cdd347064e37444e517d661cea9"
+ct_bytes = bytes.fromhex(ct_hex)
+
+def steplfsr(lfsr):
+    b7 = (lfsr >> 7) & 1
+    b5 = (lfsr >> 5) & 1
+    b4 = (lfsr >> 4) & 1
+    b3 = (lfsr >> 3) & 1
+
+    feedback = b7 ^ b5 ^ b4 ^ b3
+    lfsr = ((feedback << 7) | (lfsr >> 1)) & 0xFF # Keep it 8-bit
+    return lfsr
+
+# Brute force the 8-bit seed (0-255)
+for seed in range(256):
+    lfsr = seed
+    pt = bytearray()
+    
+    for c in ct_bytes:
+        lfsr = steplfsr(lfsr)
+        ks = lfsr
+        pt.append(c ^ ks)
+    
+    # Check if the result looks like a flag
+    if b"pico" in pt:
+        print(f"Found Key! Seed: {seed}")
+        print(f"Flag: {pt.decode(errors='ignore')}")
+        break
+```
+
 Here's the output:
 
 ![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FAUoPCxJ05gfxpZTs37hZ%252FScreenshot%2520%281841%29.png%3Falt%3Dmedia%26token%3Df5ea6188-ffa4-450b-8031-2a9b47d7e53f&width=768&dpr=3&quality=100&sign=cfbf7caa&sv=2)
@@ -692,35 +804,161 @@ For this challenge, we are given 2 files called `message.txt` and `encryption.py
 
 Let's check the `message.txt`:
 
+```text
+n = 3980993015101017140353277804369745949706344223334890812840413257071044175973139291856038905399468319530362030870405443017903655374929929825011733964330181337551061274726015170805648591339935699566483704533804413902772334194671185814032757795167276567492610548489766891166023546451221494011601527912413323143640008533569546329046772124896140545774468831882189458647605131344071766512469603284171712833770168967153998797122819825938323489525196597407482515674210085730485950171311356595462370875129472210846138025654237220573246971086221110031195278019873474587710322597773432501095235059971088078096926751790014797097704337356321889
+e = 3336497038614663222541921459680551835187913731404732354361770350895041393777650313575506088859422849385970294213215931070595265411244105028409623278013975724125500479919877564207207562572189315593170541926598007670763000263224010236185517132229343161667668429997117301579363090706170019283552359847390040311521617091884426220652237247589452213130475528794167610900761281292390567153221748933849959961895636324991675428047481887984343193310278137379109243220192216924968789976201537337617841164156347418356710488273730184036786730194843318185762453423678066812440979743181541976510807538521163968859836855958692325875567630213728207
+c = 1826031079095822845536526213992736069835634421976077836267143793181964583083024760950942723002771287666852728279522910274806690415793596687180742873080830698626932982997385432329275546871401690500831953978994557961462780510004840010773264058566952483483889805568428664825400505121671890223584721114411827697594512296341594773601537519080793749568472726239590091904052247534142381322885597999201255135897334420626115847929127670295300664641023915921412100348810694368790829410468324587518896440574662249893060377916803644769267529820246473511018540449718324002956264174312180181563530270721168751856698020681743829723342459520727632
+```
+
 And this is the `encryption.py`:
 
-This is a classic RSA challenge where the vulnerability lies in a Small Private Exponent (ddd).
+```python
+from Crypto.Util.number import getPrime, inverse, bytes_to_long
+import random
 
-While nnn and eee look massive, the `encryption.py` script reveals that ddd was generated using `getPrime(256)`. Since ddd is significantly smaller than n0.292n0.292n0.292 (in this case, d≈2256d≈2256d≈2256 while n≈22096n≈22096n≈22096), the encryption is vulnerable to the Boneh-Durfee Attack.
+# Generate two large primes (1048 bits each)
+p = getPrime(1048)
+q = getPrime(1048)
+n = p * q
+phi = (p - 1) * (q - 1)
 
-Standard RSA usually uses a small public exponent (like e=65537e=65537e=65537) and a large private exponent ddd. In our case, the script did the opposite: it chose a small ddd and calculated eee from it.
+# compute d
+d = getPrime(256)
 
-When d<n0.292d<n0.292d<n0.292, we can use Coppersmith’s method for finding small roots of modular polynomials to recover ddd (or the factorization of nnn).
+# Compute the public exponent
+e = inverse(d, phi)
 
-Also we can use Wiener’s Attack because of a specific mathematical weakness that occurs when the private exponent ddd is very small relative to the modulus nnn.
+# Encrypt a flag
+flag = b'picoCTF{...}'
+m = bytes_to_long(flag)
+c = pow(m, e, n)
+
+# Output for the challenge
+with open("message.txt", "w") as f:
+    f.write(f"n = {n}\n")
+    f.write(f"e = {e}\n")
+    f.write(f"c = {c}\n")
+```
+
+This is a classic RSA challenge where the vulnerability lies in a Small Private Exponent (d).
+
+While nnn and eee look massive, the `encryption.py` script reveals that ddd was generated using `getPrime(256)`. Since ddd is significantly smaller than n0.292 (in this case, d≈2256 while n≈22096), the encryption is vulnerable to the Boneh-Durfee Attack.
+
+Standard RSA usually uses a small public exponent (like e=65537) and a large private exponent d. In our case, the script did the opposite: it chose a small d and calculated eee from it.
+
+When d < n0.292d, we can use Coppersmith’s method for finding small roots of modular polynomials to recover d (or the factorization of n).
+
+Also we can use Wiener’s Attack because of a specific mathematical weakness that occurs when the private exponent d is very small relative to the modulus n.
 
 Specifically, the attack works whenever:
 
-d<13n1/4d < \frac{1}{3} n^{1/4}d<31​n1/4
+$$
+d < \frac{1}{3} n^{1/4}
+$$
 
-In this challenge, nnn is roughly 2048 bits. A quarter of that is 512 bits. Since our ddd was generated as a 256-bit prime (`getPrime(256)`), it is significantly smaller than the threshold required for the attack to succeed.
+In this challenge, n is roughly 2048 bits. A quarter of that is 512 bits. Since our d was generated as a 256-bit prime (`getPrime(256)`), it is significantly smaller than the threshold required for the attack to succeed.
 
 Here's the logic behind it, RSA is defined by the equation:
 
-ed−kϕ(n)=1ed - k\phi(n) = 1ed−kϕ(n)=1
+$$
+ed - k\phi(n) = 1
+$$
 
-If we divide both sides by dϕ(n)dϕ(n)dϕ(n), we get:
+If we divide both sides by dϕ(n), we get:
 
-eϕ(n)−kd=1dϕ(n)\frac{e}{\phi(n)} - \frac{k}{d} = \frac{1}{d\phi(n)}ϕ(n)e​−dk​=dϕ(n)1​
+$$
+\frac{e}{\phi(n)} - \frac{k}{d} = \frac{1}{d\phi(n)}
+$$
 
-Since nnn is very large, ϕ(n)ϕ(n)ϕ(n) is very close to nnn. When ddd is small, the fraction dk​dk​dk​ becomes an extremely good approximation of the public fraction ne​ne​ne​.
+Since nnn is very large, ϕ(n) is very close to n. When d is small, the fraction dk​​ becomes an extremely good approximation of the public fraction ​ne​.
 
 Here's the solution for this challenge (Read the comments for better understanding):
+
+```python
+def int_to_bytes(n):
+    return n.to_bytes((n.bit_length() + 7) // 8, 'big')
+
+def solve_boneh_durfee(e, n):
+    delta = 0.25
+    m = 3 # Lattice dimension parameter
+    t = 1 # Shift parameter
+    
+    X = floor(n^delta)
+    Y = floor(n^0.5)
+    
+    # Define the polynomial: f(x, y) = x*(n + 1 - y) + 1 = 0 mod e
+    P.<x, y> = PolynomialRing(ZZ)
+    A = n + 1
+    f = x * (A - y) + 1
+    
+    # Build the lattice (Coppersmith's method for bivariate)
+    # We generate shifts: x^i * f^j * e^(m-j)
+    shifts = []
+    for i in range(m + 1):
+        for j in range(i + 1):
+            # Simplified version of the Boneh-Durfee basis
+            shifts.append(x^(i-j) * f^j * e^(m-j))
+            
+    # Create the matrix from the coefficients of the shifts
+    # This is a bit dense, but it handles the Monomial scaling (X and Y)
+    monomials = sorted(set(m for s in shifts for m in s.monomials()))
+    matrix = Matrix(ZZ, len(shifts), len(monomials))
+    
+    for row, s in enumerate(shifts):
+        s_scaled = s(x*X, y*Y)
+        for col, mnt in enumerate(monomials):
+            matrix[row, col] = s_scaled.monomial_coefficient(mnt)
+            
+    LLL_matrix = matrix.LLL()
+    
+    # Reconstruct the polynomial from the shortest vector
+    new_pol = 0
+    for col, mnt in enumerate(monomials):
+        new_pol += LLL_matrix[0, col] * (mnt / mnt(X, Y))
+        
+    # Find the roots of the new polynomial over the Integers
+    # We use a resultant to eliminate one variable
+    P_uni.<x_uni> = PolynomialRing(ZZ)
+    # Check if we can find y as a function of x
+    res = new_pol.resultant(f, y)
+    roots_x = res.univariate_polynomial().roots()
+    
+    if roots_x:
+        k_val = abs(roots_x[0][0])
+        # Recover phi: ed = 1 (mod phi) => k*phi = ed - 1
+        # Since we know k, we can find phi
+        # This is a simplified check:
+        for k in [k_val]:
+            phi = (e * d_approx - 1) // k
+            # Better way: plug x back into original pol to find y
+            # Then phi = n + 1 - y
+            return k
+    
+    return None
+
+n = 3980993015101017140353277804369745949706344223334890812840413257071044175973139291856038905399468319530362030870405443017903655374929929825011733964330181337551061274726015170805648591339935699566483704533804413902772334194671185814032757795167276567492610548489766891166023546451221494011601527912413323143640008533569546329046772124896140545774468831882189458647605131344071766512469603284171712833770168967153998797122819825938323489525196597407482515674210085730485950171311356595462370875129472210846138025654237220573246971086221110031195278019873474587710322597773432501095235059971088078096926751790014797097704337356321889
+e = 3336497038614663222541921459680551835187913731404732354361770350895041393777650313575506088859422849385970294213215931070595265411244105028409623278013975724125500479919877564207207562572189315593170541926598007670763000263224010236185517132229343161667668429997117301579363090706170019283552359847390040311521617091884426220652237247589452213130475528794167610900761281292390567153221748933849959961895636324991675428047481887984343193310278137379109243220192216924968789976201537337617841164156347418356710488273730184036786730194843318185762453423678066812440979743181541976510807538521163968859836855958692325875567630213728207
+c = 1826031079095822845536526213992736069835634421976077836267143793181964583083024760950942723002771287666852728279522910274806690415793596687180742873080830698626932982997385432329275546871401690500831953978994557961462780510004840010773264058566952483483889805568428664825400505121671890223584721114411827697594512296341594773601537519080793749568472726239590091904052247534142381322885597999201255135897334420626115847929127670295300664641023915921412100348810694368790829410468324587518896440574662249893060377916803644769267529820246473511018540449718324002956264174312180181563530270721168751856698020681743829723342459520727632
+
+def wiener_attack(e, n):
+    cf = continued_fraction(e/n)
+    convergents = cf.convergents()
+    for frac in convergents:
+        k = frac.numerator()
+        d = frac.denominator()
+        if k == 0: continue
+        if pow(pow(2, e, n), d, n) == 2:
+            return d
+    return None
+
+print("Trying Wiener's Attack...")
+d = wiener_attack(e, n)
+if d:
+    print(f"Success! d = {d}")
+    print(f"Flag: {int_to_bytes(int(pow(c, d, n))).decode()}")
+else:
+    print("Wiener failed. Please use a full Boneh-Durfee script locally in Sage.")
+```
 
 Here's the output:
 
@@ -732,7 +970,34 @@ For this challenge, we are given 2 files called `message.txt` and `encryption.py
 
 Let's check the `message.txt`:
 
+```text
+Hint: The encryption was done around 1770242597 UTC
+Ciphertext (hex): 77c36bef0245021f9d9b7e396b52d2efbdbe6f8e4b79146e5d87c93416453b5f
+```
+
 Now let's check the `encryption.py`:
+
+```python
+from hashlib import sha256
+import time
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+
+def encrypt(plaintext: str, timestamp: int) -> str:
+    timestamp = int(time.time())
+    key = sha256(str(timestamp).encode()).digest()[:16]
+    cipher = AES.new(key, AES.MODE_ECB)
+    padded = pad(plaintext.encode(), AES.block_size)
+    ciphertext = cipher.encrypt(padded)
+    return ciphertext.hex()
+
+if __name__ == "__main__":
+
+    plaintext = "picoCTF{...}"
+    result = encrypt(plaintext, key)
+    print(f"Hint: The encryption was done around {timestamp} UTC\n")
+    print(f"Ciphertext (hex): {ciphertext.hex()}\n")
+```
 
 This is a "weak seed" cryptography challenge. The security of AES depends entirely on the secrecy of the key, but here, the key is generated using a Unix timestamp. Since we have a hint about when the encryption occurred, we can "brute-force" the time to find the exact second that produces the correct key.
 
@@ -746,6 +1011,35 @@ Because we know the encryption happened "around" `1770242597`, we only need to c
 
 Here's the solution for this challenge:
 
+```python
+from hashlib import sha256
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+
+ciphertext_hex = "77c36bef0245021f9d9b7e396b52d2efbdbe6f8e4b79146e5d87c93416453b5f"
+ciphertext = bytes.fromhex(ciphertext_hex)
+hint_time = 1770242597
+
+# Define a search window (e.g., 1000 seconds before and after the hint)
+for t in range(hint_time - 1000, hint_time + 1000):
+    # Replicate the key generation logic
+    key = sha256(str(t).encode()).digest()[:16]
+
+    try:
+        cipher = AES.new(key, AES.MODE_ECB)
+        decrypted = cipher.decrypt(ciphertext)
+
+        plaintext = unpad(decrypted, AES.block_size)
+
+        if b"picoCTF" in plaintext:
+            print(f"Success! Timestamp: {t}")
+            print(f"Flag: {plaintext.decode()}")
+            break
+    except (ValueError, KeyError):
+        # Unpadding failed, move to the next timestamp
+        continue
+```
+
 Here's the output:
 
 ![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FoslkuVCNtznA8BQxRtXH%252FScreenshot%2520%281843%29.png%3Falt%3Dmedia%26token%3D6ea715c4-8ca9-40f9-9ed4-8b0cacc13968&width=768&dpr=3&quality=100&sign=856c270&sv=2)
@@ -756,39 +1050,81 @@ For this challenge, we are given a file called `message.txt`
 
 Let's check the contents of `message.txt`:
 
-This is a classic Multi-prime RSA challenge. Standard RSA uses two large primes (ppp and qqq), but as the challenge hint suggests ("someone got greedy"), this modulus (nnn) is composed of multiple smaller primes.
+```text
+n = 8749002899132047699790752490331099938058737706735201354674975134719667510377522805717156720453193651
+e = 65537
+ct = 3891158515405030211396309867177046660195995913985068178988858029936868358096672572274111514200511662
+```
 
-Because the primes are smaller than usual, we can factorize nnn relatively quickly using online databases or specialized algorithms.
+This is a classic Multi-prime RSA challenge. Standard RSA uses two large primes (p and q), but as the challenge hint suggests ("someone got greedy"), this modulus (n) is composed of multiple smaller primes.
 
-## Step 1: Factorize nnn
+Because the primes are smaller than usual, we can factorize N relatively quickly using online databases or specialized algorithms.
+
+## Step 1: Factorize N
 
 The first step is to break nnn into its prime components. For numbers of this size in CTFs, the easiest tool is [factordb.com](http://factordb.com).
 
-Input our nnn value: `8749002899132047699790752490331099938058737706735201354674975134719667510377522805717156720453193651`
+Input our n value: `8749002899132047699790752490331099938058737706735201354674975134719667510377522805717156720453193651`
 
-We will find that nnn is composed of several primes.
+We will find that n is composed of several primes.
 
-## Step 2: Calculate ϕ(n)ϕ(n)ϕ(n)
+## Step 2: Calculate ϕ(n)
 
-In Multi-prime RSA, the Totient function ϕ(n)ϕ(n)ϕ(n) is calculated by taking each prime factor pi​pi​pi​ and multiplying (pi​−1)(pi​−1)(pi​−1) together:
+In Multi-prime RSA, the Totient function ϕ(n) is calculated by taking each prime factor ​pi​ and multiplying (pi​−1) together:
 
-ϕ(n)=(p1−1)(p2−1)⋯(pk−1)\phi(n) = (p\_1 - 1)(p\_2 - 1)\cdots(p\_k - 1)ϕ(n)=(p1​−1)(p2​−1)⋯(pk​−1)
+$$
+\phi(n) = (p_1 - 1)(p_2 - 1)\cdots(p_k - 1)
+$$
 
-## Step 3: Find the Private Key (ddd)
+## Step 3: Find the Private Key (d)
 
-The decryption exponent ddd is the modular multiplicative inverse of eee modulo ϕ(n)ϕ(n)ϕ(n):
+The decryption exponent d is the modular multiplicative inverse of e modulo ϕ(n):
 
-d≡e−1(modϕ(n))d \equiv e^{-1} \pmod{\phi(n)}d≡e−1(modϕ(n))
+$$
+d \equiv e^{-1} \pmod{\phi(n)}
+$$
 
 ## Step 4: Decrypt the Message
 
 Once we have ddd, we can recover the original message mmm:
 
-m=ctd(modn)m = ct^d \pmod{n}m=ctd(modn)
+$$
+m = ct^d \pmod{n}
+$$
 
 Instead of manually searching in FactorDB, we can automate the process since Python provides a module for FactorDB.
 
 Here's the solution for this challenge:
+
+```python
+from factordb.factordb import FactorDB
+from Crypto.Util.number import long_to_bytes
+
+n = 8749002899132047699790752490331099938058737706735201354674975134719667510377522805717156720453193651
+e = 65537
+ct = 3891158515405030211396309867177046660195995913985068178988858029936868358096672572274111514200511662
+
+# 1. Fetch factors from FactorDB
+f = FactorDB(n)
+f.connect()
+primes = f.get_factor_list()
+
+print(f"[*] Found {len(primes)} prime factors.")
+
+# 2. Calculate Euler's Totient phi(n)
+# For multi-prime RSA: phi = (p1-1) * (p2-1) * ... * (pk-1)
+phi = 1
+for p in primes:
+    phi *= (p - 1)
+
+# 3. Calculate Private Key d
+d = pow(e, -1, phi)
+
+# 4. Decrypt Ciphertext
+m = pow(ct, d, n)
+
+print("[+] Flag:", long_to_bytes(m).decode())
+```
 
 Here's the output:
 
@@ -800,473 +1136,184 @@ For this challenge, we are given 2 files called `public.txt` and `encrypt.py`
 
 Let's check the `public.txt`:
 
+```text
+N = 48
+p = 3
+q = 509
+h = [422, 471, 321, 117, 407, 173, 345, 139, 26, 480, 200, 190, 20, 213, 456, 48, 380, 162, 443, 412, 197, 185, 249, 61, 64, 156, 372, 144, 287, 473, 164, 128, 491, 287, 152, 279, 344, 100, 414, 493, 87, 130, 366, 447, 471, 19, 119, 228]
+ct = [[122, 197, 234, 359, 469, 298, 207, 475, 140, 477, 470, 247, 113, 445, 90, 88, 364, 175, 242, 152, 168, 101, 161, 105, 163, 272, 131, 220, 457, 498, 10, 152, 29, 282, 115, 333, 71, 433, 135, 369, 31, 93, 53, 134, 184, 319, 322, 298], [71, 499, 266, 318, 63, 210, 276, 170, 108, 327, 396, 3, 6, 68, 25, 415, 267, 104, 96, 334, 49, 451, 343, 434, 375, 205, 464, 188, 499, 489, 220, 159, 25, 311, 228, 275, 78, 86, 333, 311, 161, 86, 74, 217, 502, 163, 242, 18], [396, 215, 362, 369, 444, 449, 87, 234, 26, 423, 316, 241, 285, 237, 462, 479, 269, 176, 212, 19, 202, 23, 83, 218, 186, 124, 440, 496, 182, 29, 444, 144, 97, 368, 380, 247, 481, 209, 207, 102, 442, 291, 398, 65, 389, 128, 55, 4], [36, 204, 19, 186, 34, 107, 142, 120, 378, 425, 57, 231, 295, 477, 25, 385, 495, 170, 123, 186, 147, 372, 147, 57, 505, 219, 450, 168, 504, 3, 175, 234, 503, 479, 440, 416, 491, 209, 48, 461, 263, 459, 98, 492, 336, 497, 86, 367], [347, 240, 298, 149, 274, 475, 12, 137, 104, 159, 273, 40, 436, 457, 145, 44, 189, 351, 139, 440, 428, 216, 58, 433, 425, 256, 221, 80, 95, 325, 309, 322, 150, 406, 398, 54, 152, 103, 381, 353, 494, 338, 150, 167, 330, 16, 373, 496], [148, 489, 70, 294, 464, 307, 125, 291, 381, 128, 131, 225, 343, 281, 497, 482, 102, 195, 279, 52, 453, 41, 449, 221, 477, 467, 88, 265, 465, 500, 271, 225, 32, 460, 64, 431, 197, 124, 162, 485, 218, 328, 445, 318, 29, 342, 225, 373]]
+```
+
 Now let's check the `encrypt.py`:
 
-We're dealing with the **NTRU** (N-th degree Truncated Polynomial Ring) cryptosystem. Given the small parameters (N=48N=48N=48), this is highly vulnerable to a Lattice Attack using the **LLL** (Lenstra–Lenstra–Lovász) algorithm.
+```python
+from random import randint
+from sage.all import *
 
-The public key hhh is defined by the relation f⋅h≡g(modq)f⋅h≡g(modq)f⋅h≡g(modq). Because fff and ggg are "short" polynomials (coefficients in −1,0,1{−1,0,1}−1,0,1), we can construct a lattice where the vector (f,g)(f,g)(f,g) is an exceptionally short vector.
+N = 48
+p = 3
+q = 509
 
-We build a 2N×2N2N×2N2N×2N matrix MMM:
+R = PolynomialRing(ZZ, 'x')
+x = R.gen()
+R_modq = PolynomialRing(Integers(q), 'x').quotient(x**N - 1, 'xbar')
+R_modp = PolynomialRing(Integers(p), 'x').quotient(x**N - 1, 'xbar')
+
+def gen_poly():
+    return R([randint(-1,1) for _ in range(N)])
+
+def gen_msg(text):
+    binary_str = ''.join(format(ord(char), '08b') for char in text)
+
+    padding_length = (N - (len(binary_str) % N)) % N
+    binary_str += '0' * padding_length
+
+    chunks = [binary_str[i:i+N] for i in range(0, len(binary_str), N)]
+
+    polynomials = [
+        R([int(bit) for bit in chunk])
+        for chunk in chunks
+    ]
+
+    return polynomials
+
+def encrypt(h, m):
+    r = gen_poly()
+    return R_modq(p*(h*r) + m)
+
+def generate_keys():
+    while True:
+        # Random ternary polynomials f and g
+        f = gen_poly()
+        g = gen_poly()
+
+        # Check if f is invertible modulo p and q
+        try:
+            f_p_inv = R_modp(f)**-1
+            f_q_inv = R_modq(f)**-1
+            break
+        except:
+            continue
+
+    h = R_modq(p*(f_q_inv*g))
+
+    private_key = (f, g, f_p_inv, f_q_inv)
+    public_key = h
+    return public_key, private_key
+
+with open("flag.txt", "r") as f:
+    flag = f.read().strip()
+
+public_key, private_key = generate_keys()
+print(f"h = {public_key.list()}")
+
+ciphertext = []
+encoded = gen_msg(flag)
+for part in encoded:
+    ciphertext.append(encrypt(public_key, part))
+ct = [c.list() for c in ciphertext]
+print(f"ct = {ct}")
+
+with open("public.txt", "w") as f:
+    f.write(f"N = {N}\n")
+    f.write(f"p = {p}\n")
+    f.write(f"q = {q}\n")
+    f.write(f"h = {public_key.list()}\n")
+    f.write(f"ct = {ct}\n")
+```
+
+We're dealing with the **NTRU** (N-th degree Truncated Polynomial Ring) cryptosystem. Given the small parameters (N=48), this is highly vulnerable to a Lattice Attack using the **LLL** (Lenstra–Lenstra–Lovász) algorithm.
+
+The public key h is defined by the relation f⋅h≡g(modq). Because f and g are "short" polynomials (coefficients in −1,0,1), we can construct a lattice where the vector (f,g) is an exceptionally short vector.
+
+We build a 2N×2N matrix M:
 
 ![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FLKo9wgQzWTuWE1yHBlxY%252FScreenshot%2520%281845%29.png%3Falt%3Dmedia%26token%3Df7cd278b-ca7c-4629-af12-6b0aa9abbf30&width=768&dpr=3&quality=100&sign=d96d890a&sv=2)
 
-Where HHH is the circulant matrix representing multiplication by hhh in the ring Rq​Rq​Rq​. The shortest vector in this lattice will likely reveal the private key fff.
+Where H is the circulant matrix representing multiplication by h in the ring Rq​. The shortest vector in this lattice will likely reveal the private key f.
 
 Here's the solution for this challenge:
+
+```python
+from sage.all import *
+
+N = 48
+p = 3
+q = 509
+h_list = [422, 471, 321, 117, 407, 173, 345, 139, 26, 480, 200, 190, 20, 213, 456, 48, 380, 162, 443, 412, 197, 185, 249, 61, 64, 156, 372, 144, 287, 473, 164, 128, 491, 287, 152, 279, 344, 100, 414, 493, 87, 130, 366, 447, 471, 19, 119, 228]
+ct = [[122, 197, 234, 359, 469, 298, 207, 475, 140, 477, 470, 247, 113, 445, 90, 88, 364, 175, 242, 152, 168, 101, 161, 105, 163, 272, 131, 220, 457, 498, 10, 152, 29, 282, 115, 333, 71, 433, 135, 369, 31, 93, 53, 134, 184, 319, 322, 298], [71, 499, 266, 318, 63, 210, 276, 170, 108, 327, 396, 3, 6, 68, 25, 415, 267, 104, 96, 334, 49, 451, 343, 434, 375, 205, 464, 188, 499, 489, 220, 159, 25, 311, 228, 275, 78, 86, 333, 311, 161, 86, 74, 217, 502, 163, 242, 18], [396, 215, 362, 369, 444, 449, 87, 234, 26, 423, 316, 241, 285, 237, 462, 479, 269, 176, 212, 19, 202, 23, 83, 218, 186, 124, 440, 496, 182, 29, 444, 144, 97, 368, 380, 247, 481, 209, 207, 102, 442, 291, 398, 65, 389, 128, 55, 4], [36, 204, 19, 186, 34, 107, 142, 120, 378, 425, 57, 231, 295, 477, 25, 385, 495, 170, 123, 186, 147, 372, 147, 57, 505, 219, 450, 168, 504, 3, 175, 234, 503, 479, 440, 416, 491, 209, 48, 461, 263, 459, 98, 492, 336, 497, 86, 367], [347, 240, 298, 149, 274, 475, 12, 137, 104, 159, 273, 40, 436, 457, 145, 44, 189, 351, 139, 440, 428, 216, 58, 433, 425, 256, 221, 80, 95, 325, 309, 322, 150, 406, 398, 54, 152, 103, 381, 353, 494, 338, 150, 167, 330, 16, 373, 496], [148, 489, 70, 294, 464, 307, 125, 291, 381, 128, 131, 225, 343, 281, 497, 482, 102, 195, 279, 52, 453, 41, 449, 221, 477, 467, 88, 265, 465, 500, 271, 225, 32, 460, 64, 431, 197, 124, 162, 485, 218, 328, 445, 318, 29, 342, 225, 373]]
+
+# 1. Lattice Attack (LLL) to find f
+# Construct the NTRU Lattice Matrix
+M = Matrix(ZZ, 2*N, 2*N)
+for i in range(N):
+    M[i, i] = 1
+    for j in range(N):
+        M[i, N + j] = h_list[(j - i) % N]
+    M[N + i, N + i] = q
+
+print("Running LLL algorithm...")
+L = M.LLL()
+
+# The short vector in L usually represents the secret key [f | g]
+f_coeffs = [int(x) for x in L[0][:N]]
+print(f"Recovered f: {f_coeffs}")
+
+# 2. Setup rings for Decryption
+R_ZZ.<x> = PolynomialRing(ZZ)
+# Modulo q ring
+Rq.<xq> = PolynomialRing(GF(q))
+R_modq = Rq.quotient(xq^N - 1)
+# Modulo p ring
+Rp.<xp> = PolynomialRing(GF(p))
+R_modp = Rp.quotient(xp^N - 1)
+
+# Invert f modulo p
+f_p_inv = R_modp(f_coeffs)^-1
+
+def decrypt_chunk(c_list):
+    # a = f * c (mod q)
+    c_poly = R_modq(c_list)
+    f_poly_q = R_modq(f_coeffs)
+    a_poly = f_poly_q * c_poly
+    
+    # Lift to ZZ and center coefficients around 0 (range [-q/2, q/2])
+    # This is necessary because NTRU decryption relies on a small 'a'
+    a_centered = []
+    for coeff in a_poly.list():
+        val = Integer(coeff)
+        if val > q // 2:
+            val -= q
+        a_centered.append(val)
+    
+    # m = f_p_inv * a (mod p)
+    m_poly = f_p_inv * R_modp(a_centered)
+    
+    # Ensure result is N-length (bits)
+    res = m_poly.list()
+    return [int(b) for b in res] + [0] * (N - len(res))
+
+# 3. Decrypt all chunks and rebuild the binary string
+full_bits = ""
+for chunk in ct:
+    decrypted_bits = decrypt_chunk(chunk)
+    full_bits += "".join(map(str, decrypted_bits))
+
+# 4. Convert binary to ASCII
+flag = ""
+for i in range(0, len(full_bits), 8):
+    byte = full_bits[i:i+8]
+    if len(byte) == 8:
+        # Convert bit-string to character
+        char_code = int(byte, 2)
+        if char_code != 0: # Ignore trailing nulls from padding
+            flag += chr(char_code)
+
+print(f"Flag: {flag}")
+```
 
 Here's the output:
 
 ![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FzeTJEMjeUejnlJwHTbqE%252FScreenshot%2520%281846%29.png%3Falt%3Dmedia%26token%3D6a959a2b-16fe-440b-95de-ea85ecd13de4&width=768&dpr=3&quality=100&sign=5173ed16&sv=2)
 
 This Cryptography category during picoCTF 2026 turned out to be more interesting than I expected. At first, I thought it would require manual analysis or simple calculations, but I was surprised that almost everything had to be solved through scripting. Instead of relying on tools alone, I had to write Python scripts to automate the process, which made the challenge both more difficult and more enjoyable.
-
-
-Last updated 4 months ago
-
----
-
-
-# General Skills
-
-Source: https://kur0sh1r0.gitbook.io/ctf-writeups/picoctf-2026/general-skills
-
-For the complete documentation index, see [llms.txt](https://kur0sh1r0.gitbook.io/ctf-writeups/llms.txt). This page is also available as [Markdown](https://kur0sh1r0.gitbook.io/ctf-writeups/picoctf-2026/general-skills.md).
-
-Good day, everyone! Today, I’ll be walking you through the challenges I’ve successfully solved in the General Skills category of picoCTF 2026!
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FdH7noiyb4suFPIxBleqg%252F200_d.gif%3Falt%3Dmedia%26token%3D8bc3d3be-2fb7-44b4-8b29-ea69969da10c&width=768&dpr=3&quality=100&sign=a5a3935a&sv=2)
-
-## SUDO MAKE ME A SANDWICH - 50pts
-
-For this challenge, we are given an SSH credentials we can connect on.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FQy9EUDTLsk13PObRYsS4%252FScreenshot%2520%281612%29.png%3Falt%3Dmedia%26token%3D22c954db-7fc7-4e9f-8d7a-02cb39c7af59&width=768&dpr=3&quality=100&sign=323df097&sv=2)
-
-As you can see, the file `flag.txt` is owned by root. The question now is: how can we read it as a regular user? This is where `sudo` becomes useful. Let’s check what commands we are allowed to run as root using `sudo -l`.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FgvqPWPvRj4DCxhrdGwPY%252FScreenshot%2520%281613%29.png%3Falt%3Dmedia%26token%3D04c7432e-1b3d-4bb7-bbfe-49a92a5d4cf6&width=768&dpr=3&quality=100&sign=9e26cb78&sv=2)
-
-Since the `sudo -l` command shows that we are allowed to run **emacs** as root, we can use it to access files that normally require root privileges. **Emacs** is a powerful text editor in Linux that can open and view files, similar to nano or vim, but with more advanced features. Because we can execute emacs using sudo, it will run with root permissions, allowing us to open the protected `flag.txt` file even as an ordinary user. By running the command `sudo emacs flag.txt`, the file will open inside emacs, and we can read the flag even though the file is owned by root.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F8V00pXj5zZpwE2oh6DAC%252FScreenshot%2520%281615%29.png%3Falt%3Dmedia%26token%3D64f5cd45-959a-449c-934f-5eaff9025352&width=768&dpr=3&quality=100&sign=5ea28ca3&sv=2)
-
-## Piece by Piece - 50pts
-
-For this challenge we are given an SSH credentials again that we can connect on.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FhQF4uKNqgKcwkOEs7UKp%252FScreenshot%2520%281619%29.png%3Falt%3Dmedia%26token%3D6d7aa3b6-0a03-4c18-9a57-37915a007a7a&width=768&dpr=3&quality=100&sign=4a56c15c&sv=2)
-
-The `instructions.txt` file provides the following hints:
-
-1. The flag is split into multiple parts as a **zipped file**.
-2. We need to **combine the parts into one file** using Linux commands.
-3. The zip file is **password protected**; the password is `"supersecret"`.
-4. After unzipping, the extracted file will contain the flag.
-
-From this, we know the steps: **merge → unzip → read**.
-
-In Linux, the `cat` command can **concatenate multiple files** into a single file. Since the parts are named sequentially (`part_aa` to `part_ae`), we can merge them in order:
-
-`cat part_aa part_ab part_ac part_ad part_ae > flag.zip`
-
-This creates a single zip file named `flag.zip` containing all parts.
-
-The file is protected with the password `supersecret`. To extract it, run:
-
-`unzip flag.zip`
-
-After extraction, a file such as `flag.txt` will appear in the directory.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FEAwOqCDgTlAHSMNJAoVp%252FScreenshot%2520%281622%29.png%3Falt%3Dmedia%26token%3Dcfa3a2b1-38f3-4b5f-a5db-b289634b3791&width=768&dpr=3&quality=100&sign=4d628c33&sv=2)
-
-## bytemancy 0 - 50pts
-
-For this challenge, we are given a file called `app.py` .
-
-Take a closer look at the condition, `"\x65"` is **hexadecimal for 101 in decimal**, which corresponds to the ASCII character `'e'`. Therefore, `"\x65\x65\x65"` is the string `'eee'`. All we need to do is to type `'eee'` and the program will provide the flag. Now let's connect to the server:
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F541kkxBPMDbwXYggMuBD%252FScreenshot%2520%281624%29.png%3Falt%3Dmedia%26token%3D8a099b7d-a63d-42b2-ae27-158b1f9454e1&width=768&dpr=3&quality=100&sign=e08532a2&sv=2)
-
-## Printer Shares - 50pts
-
-In this challenge, credentials for an SMB server were provided. After enumerating the available shares using `smbclient`, the following shares were discovered:
-
-`smbclient -L //mysterious-sea.picoctf.net -p 63048 -N`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F1ZwfAMPlSnYsWc5uAZ5e%252FScreenshot%2520%281638%29.png%3Falt%3Dmedia%26token%3Daa622a14-a648-449c-a5bc-ffff5cc1ba55&width=768&dpr=3&quality=100&sign=baf34955&sv=2)
-
-We found an available share from the share list, so we attempted to connect to it and check its contents.
-
-`smbclient //mysterious-sea.picoctf.net/shares -p 63048 -N`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FNFCHKg34qkkYAXnzw0RI%252FScreenshot%2520%281639%29.png%3Falt%3Dmedia%26token%3Ddad039c9-daeb-4159-8a0a-c2935916a4c2&width=768&dpr=3&quality=100&sign=fd7a52c8&sv=2)
-
-As you can see that there's a `flag.txt` here, next thing we did is to `get` the file to transfer it to my machine.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FVc8RnmAaX4a623WtVjpK%252FScreenshot%2520%281640%29.png%3Falt%3Dmedia%26token%3Dcb6c8eed-630d-4fb3-b9b0-671304e6ab7b&width=768&dpr=3&quality=100&sign=5d1c17e2&sv=2)
-
-## MY GIT - 50pts
-
-In this challenge, a Git repository is available to us, and it is accessible through an SSH connection.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FUeyxcntcXQ0sRB1Wa289%252FScreenshot%2520%281641%29.png%3Falt%3Dmedia%26token%3Dcfbed21a-2bfd-41ff-bc3a-cd23f3d80d54&width=768&dpr=3&quality=100&sign=b89e3197&sv=2)
-
-Let's read the `README.md`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FvlPwjLphaq4zeuq7esbu%252FScreenshot%2520%281642%29.png%3Falt%3Dmedia%26token%3D3fb441af-a47c-46f5-a97e-f663b3daa76e&width=768&dpr=3&quality=100&sign=b8f74af8&sv=2)
-
-This means the server **only accepts commits made by a user with username** `root` **and email** `root@picoctf`. So we need to **pretend to be that user locally**, push a commit with `flag.txt`, and then the server will reveal the flag.
-
-Here's how we can get the flag:
-
-Step 1: Set Git identity to `root:root@picoctf`
-
-`git config user.name "root"`
-
-`git config user.email "root@picoctf"`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FOfp46brJI2HWWAsRxXYM%252FScreenshot%2520%281643%29.png%3Falt%3Dmedia%26token%3D3e466edb-ff3d-4125-94a6-b1683269189c&width=768&dpr=3&quality=100&sign=1783c93a&sv=2)
-
-Step 2: Create `flag.txt`
-
-`echo "BlahBlah" > flag.txt`
-
-`git add flag.txt`
-
-`git commit -m "push flag.txt"`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fh41gV9zWvCteOgFyxCwo%252FScreenshot%2520%281644%29.png%3Falt%3Dmedia%26token%3D84cddd34-ba34-4104-b4e6-69de26dd6475&width=768&dpr=3&quality=100&sign=19938061&sv=2)
-
-Even if the file is empty or contains dummy text, it doesn’t matter — the server only checks the **commit author**.
-
-Step 3: Push to the repo
-
-`git push origin master`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FcHUTnuze0LyPlZw5vk6d%252FScreenshot%2520%281648%29.png%3Falt%3Dmedia%26token%3D35f7880a-1d14-4131-bb5c-4b1f680e3fb7&width=768&dpr=3&quality=100&sign=7e3ad668&sv=2)
-
-## Password Profiler - 100pts
-
-For this challenge, we are given 3 files `userinfo.txt`, `hash.txt`, `check_password.py`
-
-Let's check the `userinfo.txt`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FTdZ31KKOlCaWPcSHfzEw%252FScreenshot%2520%281649%29.png%3Falt%3Dmedia%26token%3D80cc83a0-6b20-4697-9e75-75b909774361&width=768&dpr=3&quality=100&sign=e66ab358&sv=2)
-
-So it's full of credentials about `Alice`, according to the hint, we can utilize the tool `cupp` to make a wordlist. `cupp` is a wordlist generator, it uses provided credentials of the target to craft the possible passwords.
-
-This is the `hash.txt`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F0wH6mFKKIbY8STfz9oXF%252FScreenshot%2520%281650%29.png%3Falt%3Dmedia%26token%3D916e95a4-edd8-4a10-ae87-1d83e751b095&width=768&dpr=3&quality=100&sign=100a1631&sv=2)
-
-Now to crack this, we need a wordlist, let's use `cupp`, to generate a wordlist using the credentials provided to us
-
-Launch `cupp` in interactive mode:
-
-`cupp -i`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FPxDPrWuZmFogS6npXgx2%252FScreenshot%2520%281651%29.png%3Falt%3Dmedia%26token%3De7030ae4-d1a5-47a3-ba0a-84c91ed580cb&width=768&dpr=3&quality=100&sign=978bc643&sv=2)
-
-This is all you need, leave other fields empty, only follow the `user-info.txt` .
-
-Now this is the `check_password.py`
-
-So it's a pre-build password cracker for us, all we need to do is to change the name of wordlist file, to the filename of our wordlist.
-
-Now let's run it
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FKYsZFMR0oKD75ECwZU9E%252FScreenshot%2520%281653%29.png%3Falt%3Dmedia%26token%3D345aa25b-9f80-4509-98b1-7ac8eeafae9d&width=768&dpr=3&quality=100&sign=2e808d1a&sv=2)
-
-## KSECRETS - 100pts
-
-We are provided a file named `kubeconfig` and a server that we can connect with.
-
-Let's check the contents of `kubeconfig`
-
-This is a **Kubernetes secrets extraction challenge**. We already have the `kubeconfig`, so the goal is to connect to the cluster → list secrets → decode them → get the flag.
-
-For this challenge, we will need `kubectl` for this, you can install it via `apt`
-
-Once installed, the first thing that we do is to list the namespaces
-
-`kubectl --kubeconfig kubeconfig --insecure-skip-tls-verify=true --server https://green-hill.picoctf.net:55327 get ns`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fzo9fMc2axDZB11OkoVAx%252FScreenshot%2520%281658%29.png%3Falt%3Dmedia%26token%3D0564e8d3-34bd-4398-b070-0c97bd050d6c&width=768&dpr=3&quality=100&sign=9ab13b5&sv=2)
-
-So we have a `picoctf` namespace, now let's get the secrets of `picoctf` namespace
-
-`kubectl --kubeconfig kubeconfig --insecure-skip-tls-verify=true --server https://green-hill.picoctf.net:55327 get secrets -n picoctf`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F3xUy50KyyhTx4deCHGKa%252FScreenshot%2520%281659%29.png%3Falt%3Dmedia%26token%3Dd9d2feb4-eae7-4c65-b35e-2c95a4903cf7&width=768&dpr=3&quality=100&sign=c4f00d64&sv=2)
-
-Now all we need to do is to dump the secret named `ctf-secret`
-
-`kubectl --kubeconfig kubeconfig --insecure-skip-tls-verify=true --server https://green-hill.picoctf.net:55327 get secret ctf-secr
-et -n picoctf -o yaml`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F5haUHK6twJqZ7bv2Ipg1%252FScreenshot%2520%281656%29.png%3Falt%3Dmedia%26token%3D59fe0c73-1aad-448f-8942-723ceabf6ab5&width=768&dpr=3&quality=100&sign=c11931c1&sv=2)
-
-There's the flag, just encoded in Base64. Let's decode it
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FXHbdXkdWO2NrWCCiVNYu%252FScreenshot%2520%281657%29.png%3Falt%3Dmedia%26token%3Dace42974-0b94-4fc9-a329-a27b569576cc&width=768&dpr=3&quality=100&sign=44ce665f&sv=2)
-
-## ping-cmd - 100pts
-
-For this challenge, we are given a server that we can connect with using `netcat`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F2Pb7ttAFZXEY4IfwzinD%252FScreenshot%2520%281660%29.png%3Falt%3Dmedia%26token%3Dface85be-fc87-4ebc-bb24-d5f6e6b5ec8d&width=768&dpr=3&quality=100&sign=797cdfd6&sv=2)
-
-So it's just asking as for an IP to `ping` it, according to the hint of this challenge:
-
-* The program uses a shell command behind the scenes.
-* Sometimes, You can run more than one command at a time.
-
-Since it's running a shell command, we can use command separators for Linux, such as `|` and `&&` in order for us to inject another command in the prompt
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FhU0aJzsaESMRVN0gGZA0%252FScreenshot%2520%281664%29.png%3Falt%3Dmedia%26token%3D9a3c5b25-b2cc-4547-ae9b-6e68b8da9240&width=768&dpr=3&quality=100&sign=c9e72f7d&sv=2)
-
-As you can see, when I put `| ls -al`, it executes. Now we know where the flag is located, let's open the `flag.txt` using `| cat flag.txt`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FfHE9AyA5bXMiimInhfKv%252FScreenshot%2520%281665%29.png%3Falt%3Dmedia%26token%3D437bf28d-8be3-4444-a79a-e72db70a0c05&width=768&dpr=3&quality=100&sign=140d96da&sv=2)
-
-## bytemancy 1 - 100pts
-
-For this challenge, we are given a file named `app.py` and a server that we can connect on using `netcat`.
-
-This is the contents of `app.py`
-
-The core logic of this code is a simple input check: it repeatedly prompts the user to enter a string, and if that string exactly matches 1751 repetitions of the ASCII character with decimal code 101 (which is `'e'`), it prints the flag and exits; otherwise, it tells the user their input was incorrect and loops again. Essentially, the program is just testing whether you can correctly generate and provide the specific byte sequence (`"e"*1751`) that satisfies the equality check.
-
-Since we don't want to type `e` manually 1751 times, we will automate this using `pwntools`
-
-This will send `1751 e` to the server and get the flag
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fe6lgPFw13YJz5sBL7j5D%252FScreenshot%2520%281666%29.png%3Falt%3Dmedia%26token%3D1c7e31fa-e99e-496a-93c3-4a767cf9f3aa&width=768&dpr=3&quality=100&sign=9dbe415e&sv=2)
-
-## Undo - 100pts
-
-For this challenge, we are given a server that we can connect on using `nc`
-
-Basically it's just a question-based CTF and we will Identify it how we can reverse the encoded text, here's the full answer:
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FhCIJWjAn52KjDX1uwsYS%252FScreenshot%2520%281667%29.png%3Falt%3Dmedia%26token%3D9cd03571-e793-4cd4-8b53-7d1e585fd40b&width=768&dpr=3&quality=100&sign=3cafed16&sv=2)
-
-## MultiCode - 200pts
-
-For this challenge, we are given a file called `message.txt`
-
-Let's open the `message.txt`
-
-Now according to the hint given:
-
-*The flag has been wrapped in several layers of common encodings such as ROT13, URL encoding, Hex, and Base64. Can you figure out the order to peel them back?*
-
-So it's a multiple encoding process, we can use CyberChef for this challenge to chain the decoding process.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FQt1ahABabZz88EkPvjAn%252FScreenshot%2520%281669%29.png%3Falt%3Dmedia%26token%3Dbcb3d292-3e0d-4b6f-9bd0-7f112b74b44b&width=768&dpr=3&quality=100&sign=8efb5f6e&sv=2)
-
-## bytemancy 2 - 200pts
-
-For this challenge, we are given a file called `app.py` and a server that we can connect with using `netcat`
-
-Let's check the contents of `app.py`
-
-The core logic is that the program repeatedly prompts for input and checks whether it exactly matches **three consecutive bytes of value 0xFF** (`b"\xff\xff\xff"`). It reads input as raw bytes, not text, so ordinary characters won’t work; only the precise sequence of three `0xFF` bytes satisfies the condition, at which point it prints the flag. To solve it, we simply send those three bytes side-by-side without any extra characters or spaces, we can utilize `pwntools` again for this challenge
-
-Here's the output
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fl2pLpNRvTcfLxqRb4j25%252FScreenshot%2520%281670%29.png%3Falt%3Dmedia%26token%3D5c38646b-1d88-4a26-a0cf-695923bd73cd&width=768&dpr=3&quality=100&sign=c1cea485&sv=2)
-
-## Printer Shares 2 - 200pts
-
-In this challenge, credentials for an SMB server were provided. After enumerating the available shares using `smbclient`, the following shares were discovered:
-
-`smbclient -L //green-hill.picoctf.net -p 57305 -N`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FQapnw9XPErAw5NrRRAH3%252FScreenshot%2520%281672%29.png%3Falt%3Dmedia%26token%3Dcde26eb3-36d3-40db-827e-3a1a4c70cc40&width=768&dpr=3&quality=100&sign=8037cab8&sv=2)
-
-So it has a `secure-shares` , I tried to access it but yeah as expected, it's restricted.
-
-`smbclient //green-hill.picoctf.net/shares -p 57305 -N`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FTMORLQNMYskMtrwayBrH%252FScreenshot%2520%281673%29.png%3Falt%3Dmedia%26token%3Db6d245d2-a88a-4f51-926c-28235f3dcc09&width=768&dpr=3&quality=100&sign=b029e95f&sv=2)
-
-Inside I've found `content.txt` , `kafka.txt`, `notification.txt`
-
-Here's the content:
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F74tdtfYLgwFkP5O0SgHz%252FScreenshot%2520%281674%29.png%3Falt%3Dmedia%26token%3D4d268efa-9b0c-4cd3-9aeb-cf32fa2821d9&width=768&dpr=3&quality=100&sign=e9443&sv=2)
-
-So in the `notification.txt` , it's clear that `joe` is our user. Now according to the hint, `rockyou.txt` is being mentioned, it means `joe` has access to `secret-shares` all we need to do is to bruteforce the password. I've found a script in [Github](https://gist.github.com/shoriwe/851d5e27317ac8fec9954f00a0b8a701) that we can use for this challenge.
-
-I only have to write the user and domain into a file and it's ready to go
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fw94keMwwbnnFYmikrJ4A%252FScreenshot%2520%281678%29.png%3Falt%3Dmedia%26token%3D1b733a8f-75fa-4ccb-98e1-885225456c21&width=768&dpr=3&quality=100&sign=cb7d2720&sv=2)
-
-So the pasword is `popcorn`, now let's connect to the SMB again using `joe`
-
-`smbclient //green-hill.picoctf.net/secure-shares -p 57305 -U joe`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FH9vXnGamJILylnlR9b8F%252FScreenshot%2520%281680%29.png%3Falt%3Dmedia%26token%3Df8542a9c-7f99-4e48-a2eb-a7b97b7ada7b&width=768&dpr=3&quality=100&sign=c952c7a&sv=2)
-
-Now we can get the `flag.txt`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FG9DKDYLq3zuyqPui4Vuu%252FScreenshot%2520%281681%29.png%3Falt%3Dmedia%26token%3D34038c10-bdc2-4f17-831b-a14dd099f298&width=768&dpr=3&quality=100&sign=cf3a558f&sv=2)
-
-## ABSOLUTE NANO - 200pts
-
-For this challenge, we are given an SSH server that we can connect with.
-
-When I check what we can execute as root, I saw `nano`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F0eBTYbZBkC8YaKWPi7kf%252FScreenshot%2520%281685%29.png%3Falt%3Dmedia%26token%3Daa351d09-20e5-47f7-9c0c-8d17beb587a2&width=768&dpr=3&quality=100&sign=932356e2&sv=2)
-
-It turns out that we can edit `/etc/sudoers` file.
-
-`sudo nano /etc/sudoers`
-
-If you don't know, Nano can execute commands. Here's how
-
-When you're inside `nano`, escape nano to shell.
-
-`Ctrl + R`
-
-`Ctrl + X`
-
-After that, Nano will ask for a command.
-
-Then type `reset; bash 1>&0 2>&0`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F2oOfL135B1Pa7YzNAWzC%252FScreenshot%2520%281686%29.png%3Falt%3Dmedia%26token%3D09d99c2b-ba06-44f1-ba41-e6d9f90fd348&width=768&dpr=3&quality=100&sign=865c52ff&sv=2)
-
-And press enter
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F5PsPgu2iAZiRfPxFAQMn%252FScreenshot%2520%281687%29.png%3Falt%3Dmedia%26token%3D0dfcf52d-8a2d-4d06-9344-5d7e5c756db3&width=768&dpr=3&quality=100&sign=9669e1db&sv=2)
-
-And we are root:>>
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FeEF6ctLAlBylz4RykPJI%252FScreenshot%2520%281688%29.png%3Falt%3Dmedia%26token%3Dc5289b16-8500-4dc6-ab05-8e9015b4de22&width=768&dpr=3&quality=100&sign=95ff1982&sv=2)
-
-## Failure Failure - 200pts
-
-For this challenge, we are given a file called `app.py` , `haproxy.cfg` and a web server that we can access.
-
-Let's check the `app.py`
-
-Now let's check the `haproxy.cfg`
-
-The Flask application reveals that the flag is only returned when the environment variable `IS_BACKUP` is set to `"yes"`. In the normal case, the service returns `"No flag in this service"`, meaning the primary server does not contain the flag, while the backup service likely does. The application also uses a **global rate limiter** with a limit of 300 requests per minute, and once the limit is exceeded, the server returns a 503 response. Because the rate limit key is hardcoded to `"global"`, the limit applies to all users collectively instead of per‑IP, meaning repeated requests can affect the availability of the entire service. This detail suggests that the rate limiter can be abused to disrupt the primary service.
-
-The HAProxy configuration shows that traffic is sent to server `s1` on port 8000 by default, while server `s2` on port 9000 is marked as a **backup server**. HAProxy performs health checks using `GET /`, and if the primary server fails to respond with status 200, traffic is automatically redirected to the backup server. Since the Flask code only reveals the flag when running in backup mode, the goal is to force HAProxy to consider the primary server unhealthy. This can be done by sending more than 300 requests per minute to trigger the rate limiter, causing the primary server to return errors during the health check. Once HAProxy detects the failure, it switches to the backup server, where `IS_BACKUP=yes` is set, allowing the flag to be returned in the response.
-
-All we need to do is to flood it:>>
-
-This exploit works perfectly because the Flask application uses a **global rate limit of 300 requests per minute**, meaning all requests share the same limit instead of being limited per user. The command sends **700 requests in parallel using** `xargs -P50`, which quickly exceeds the allowed limit and causes the primary server to return errors. Since HAProxy continuously checks the primary server with health checks, these errors make it appear unhealthy, forcing HAProxy to switch to the **backup server**, where the environment variable `IS_BACKUP=yes` is set. Once traffic is routed to the backup instance, the application reveals the flag, making this flood request the ideal way to trigger the failover and obtain the flag.
-
-After we flood it, let's visit the website
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FByjBKS8sn0GqNfYvgHcP%252FScreenshot%2520%281692%29.png%3Falt%3Dmedia%26token%3D1ad241c9-9da9-4efb-9a6a-8626cae8f25d&width=768&dpr=3&quality=100&sign=8098f99d&sv=2)
-
-## Printer Shares 3 - 300pts
-
-For this challenge, we are given an SMB server that we can connect to.
-
-`smbclient -L //dolphin-cove.picoctf.net -p 56828 -N`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FPcGQkErPeBb1xOJ7yQH3%252FScreenshot%2520%281694%29.png%3Falt%3Dmedia%26token%3Db9d0a7bd-6f3c-47fc-8de6-55a95cd5b099&width=768&dpr=3&quality=100&sign=3e3cf5a9&sv=2)
-
-The same as Printer Share 2, let's check the `shares`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FmQDezaoFyIz8SAvLeKF5%252FScreenshot%2520%281696%29.png%3Falt%3Dmedia%26token%3D5d78e460-5b4a-4c4b-a123-4bdb1ff6160c&width=768&dpr=3&quality=100&sign=1a0e99cc&sv=2)
-
-As you can see, there's a bash script in shares, let's get it
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Fah3wxwnfi3l2Ukwthcmi%252FScreenshot%2520%281698%29.png%3Falt%3Dmedia%26token%3Dd2ca5c08-cf2b-4aa9-bfd1-8fb3eb617883&width=768&dpr=3&quality=100&sign=c5544428&sv=2)
-
-This is the content of `script.sh`, as said in the comment, it runs every minute. So it's a cronjob kind of challenge, what we can do is to use this to our advantage. We can modify the `script.sh` and transfer it back to the SMB server. But first we must locate where the flag is.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FUz30GWBG8jNGI7gWDj0K%252FScreenshot%2520%281703%29.png%3Falt%3Dmedia%26token%3D359844ee-8268-49f6-80f3-62999e13e5c3&width=768&dpr=3&quality=100&sign=6aa326d5&sv=2)
-
-What I did is to use `find` and analyze from the `/` directory to look for a file named `flag.txt` and save the output in `flag_loc.txt`
-
-Next thing I did is to transfer it back to the server using `put` and after a minute, the file appears.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FHVT4UZM3CtfXL2rqfcGK%252FScreenshot%2520%281705%29.png%3Falt%3Dmedia%26token%3D8ac6f35c-1341-482a-9213-82940b198cfe&width=768&dpr=3&quality=100&sign=c7c80108&sv=2)
-
-As you can see, the full path of the `flag.txt` is `/challenge/secure-shares/flag.txt` Next thing we can do is to copy the `flag.txt` to `/challenge/shares` where the `script.sh` is currently placed.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F32vfHD2fBYcRJ9ISn2Of%252FScreenshot%2520%281707%29.png%3Falt%3Dmedia%26token%3D57c14832-3c69-411d-9dfe-4499d9a27dfe&width=768&dpr=3&quality=100&sign=a716de9e&sv=2)
-
-And I transfer it back to the server and wait for another minute and got the flag.
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F3JDnZmLKKsdFJmvwfcXZ%252FScreenshot%2520%281710%29.png%3Falt%3Dmedia%26token%3D35c30742-c236-4986-ba8f-2a9e25c53d3b&width=768&dpr=3&quality=100&sign=a65d3e2a&sv=2)
-
-## bytemancy 3 - 400pts
-
-For this challenge we are given a file `app.py`, `spellbook`, and a server that we can connect to using `netcat`.
-
-Let's check the `app.py`
-
-The Python script asks for the addresses of these functions:
-
-* `ember_sigil`
-* `glyph_conflux`
-* `astral_spark`
-* `binding_word`
-
-Now let's check the `spellbook`
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FMmNrMLAYpgHh2JG03Cs8%252FScreenshot%2520%281718%29.png%3Falt%3Dmedia%26token%3Dd24b3040-8e78-454a-965e-99570024b468&width=768&dpr=3&quality=100&sign=6f31b849&sv=2)
-
-At first, I thought it was a txt file but it turns out to be an executable file. Let's change its permission and execute it.
-
-`chmod +x spellbook`
-
-When I run it, it gives me nothing. Now let's use `objdump` to analyze the binary
-
-`objump -d ./spellbook`
-
-Look closely from our `objdump`:
-
-Basically, the script expects **raw 4‑byte little endian**, same as `p32(addr)`.
-
-**ember\_sigil**
-
-`0x08049176 → 76 91 04 08`
-
-**glyph\_conflux**
-
-`0x0804919a → 9a 91 04 08`
-
-**astral\_spark**
-
-`0x080491c1 → c1 91 04 08`
-
-**binding\_word**
-
-`0x080491e3 → e3 91 04 08`
-
-Now let's check the `app.py` again, this line:
-
-Means each run picks **3 random functions**, so you must send the correct bytes depending on the question.
-
-Example prompt:
-
-You send raw bytes:
-
-NOT text.
-
-Here's the `solve.py` for this challenge:
-
-Here's the output
-
-![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FPzRJrbsgmz0fycW827rO%252FScreenshot%2520%281719%29.png%3Falt%3Dmedia%26token%3D8002c5df-2b75-4d54-a3a3-78c3fdb1519a&width=768&dpr=3&quality=100&sign=bec61665&sv=2)
-
-We've got the flag, the error is just EOF, because the connection closed but our script still trying to recv:>>
-
-That's a wrap! This is all of the challenges for General Skills category of picoCTF 2026! This year's picoCTF is more fun!
-
-
-Last updated 4 months ago
-
----
