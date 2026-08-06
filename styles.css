@@ -1152,6 +1152,11 @@ footer {
     padding: 0 6px;
 }
 
+#entry {
+    padding-top: 28px;
+    padding-bottom: 100px;
+}
+
 .entry-back {
     display: inline-flex;
     align-items: center;
