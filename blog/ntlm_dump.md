@@ -6,9 +6,9 @@ cover: ../uploads/cover_ntlm.jpg
 tags: NTLM dumping, Rubber Ducky Pico
 ---
 
-Good day, everyone! It feels great to be back writing and polishing a new writeup on Medium after some time away. If you’ve been following my CTF journey, a quick update: I’ve moved my detailed CTF writeups over to [GitBook](https://kur0sh1r0.gitbook.io/ctf-writeups), where everything is now better organized and easier to follow. Feel free to check it out on my profile if you’re interested in deep dives, walkthroughs, and lessons learned from various challenges.
+Good day, everyone! It feels great to be back writing and polishing a new writeup on Medium after some time away. If you've been following my CTF journey, a quick update: I've moved my detailed CTF writeups over to [GitBook](https://kur0sh1r0.gitbook.io/ctf-writeups), where everything is now better organized and easier to follow. Feel free to check it out on my profile if you're interested in deep dives, walkthroughs, and lessons learned from various challenges.
 
-Now, let’s get straight to our agenda: **how can a Raspberry Pi Pico, acting as a Rubber Ducky, be used to dump NTLM hashes?** We’ll break down the idea behind the attack, how USB HID trust is abused, and why physical access alone can be enough to compromise a system.
+Now, let's get straight to our agenda: **how can a Raspberry Pi Pico, acting as a Rubber Ducky, be used to dump NTLM hashes?** We'll break down the idea behind the attack, how USB HID trust is abused, and why physical access alone can be enough to compromise a system.
 
 ![Raspberry Pi Pico](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*N8D7Te4GlW_lsFcPsgCBjg.png)
 
@@ -16,15 +16,15 @@ At its core, this attack abuses the implicit trust operating systems place in **
 
 By leveraging this trust, the injected commands can trigger built-in Windows utilities or PowerShell scripts that extract NTLM credential material from memory or the local system. Since NTLM hashes are often cached for authentication purposes, an attacker with brief physical access can dump these hashes without exploiting a traditional software vulnerability. In many cases, this technique bypasses antivirus detection because it relies on legitimate tools already present on the system, making it a classic example of a **living-off-the-land** attack where hardware-assisted input becomes the attack vector.
 
-**Understanding NTLM Authentication in Windows**
+## Understanding NTLM Authentication in Windows
 
-NTLM (NT LAN Manager) is a challenge–response authentication protocol used by Windows systems to authenticate users without transmitting their plaintext passwords over the network. Instead of sending the actual password, Windows derives an **NTLM hash** from the user’s password and uses that hash during the authentication process. While newer environments rely heavily on Kerberos, NTLM is still widely supported for backward compatibility, local authentication, and specific network scenarios.
+NTLM (NT LAN Manager) is a challenge–response authentication protocol used by Windows systems to authenticate users without transmitting their plaintext passwords over the network. Instead of sending the actual password, Windows derives an **NTLM hash** from the user's password and uses that hash during the authentication process. While newer environments rely heavily on Kerberos, NTLM is still widely supported for backward compatibility, local authentication, and specific network scenarios.
 
-When a user attempts to authenticate, the system generates a challenge that must be answered using the user’s NTLM hash. If the response matches what the system expects, access is granted. The critical issue here is that **possession of the hash is often enough to authenticate**, even without knowing the original password. This is what enables attacks such as _pass-the-hash_, where an attacker can reuse a captured NTLM hash to authenticate as a victim user without ever cracking the password.
+When a user attempts to authenticate, the system generates a challenge that must be answered using the user's NTLM hash. If the response matches what the system expects, access is granted. The critical issue here is that **possession of the hash is often enough to authenticate**, even without knowing the original password. This is what enables attacks such as *pass-the-hash*, where an attacker can reuse a captured NTLM hash to authenticate as a victim user without ever cracking the password.
 
 Because NTLM hashes remain valid until the password is changed, dumping them can have long-lasting impact. In enterprise environments, a single compromised hash — especially from a privileged account — can lead to lateral movement, privilege escalation, and full domain compromise. This makes NTLM hashes a high-value target during post-exploitation and physical access attacks.
 
-**Where NTLM Hashes Are Stored**
+## Where NTLM Hashes Are Stored
 
 Windows does not store NTLM hashes in a single location; instead, they exist across multiple components depending on how and when authentication occurs. Understanding where these hashes live is essential to understanding how attackers extract them.
 
@@ -38,15 +38,15 @@ In short, NTLM hashes exist both **at rest** (in registry hives like SAM and SEC
 
 While manually dumping NTLM hashes is effective, it comes with a major limitation: **time**. Techniques involving tools like Mimikatz or offline hive extraction typically require sustained access to the target machine. An attacker needs enough time to elevate privileges, transfer tools, execute commands carefully, and ensure the extracted data is successfully retrieved. In real-world scenarios — especially in shared offices, labs, or public environments — this level of uninterrupted access is rarely guaranteed.
 
-Now imagine a different situation: access to the victim’s computer lasts only a few seconds. Maybe the user steps away briefly, or the machine is unattended just long enough for a USB device to be inserted. In such cases, manual techniques become impractical. There is no time to deploy tools, troubleshoot errors, or interact with the system directly. **This is where our agenda comes in.** By leveraging a Raspberry Pi Pico acting as a Rubber Ducky, the entire manual process can be compressed into an automated sequence of trusted keystrokes — executed instantly, silently, and without raising suspicion. What normally takes minutes can now be achieved in moments, turning a brief glimpse of physical access into a full credential compromise.
+Now imagine a different situation: access to the victim's computer lasts only a few seconds. Maybe the user steps away briefly, or the machine is unattended just long enough for a USB device to be inserted. In such cases, manual techniques become impractical. There is no time to deploy tools, troubleshoot errors, or interact with the system directly. **This is where our agenda comes in.** By leveraging a Raspberry Pi Pico acting as a Rubber Ducky, the entire manual process can be compressed into an automated sequence of trusted keystrokes — executed instantly, silently, and without raising suspicion. What normally takes minutes can now be achieved in moments, turning a brief glimpse of physical access into a full credential compromise.
 
-**Automating the Attack with Raspberry Pi Pico (Rubber Ducky)**
+## Automating the Attack with Raspberry Pi Pico (Rubber Ducky)
 
 Before the Raspberry Pi Pico can function as a Rubber Ducky, it must be properly configured. The complete step-by-step setup process is documented in the [GitHub](https://github.com/dbisu/pico-ducky) repository referenced below.
 
 With the preparation out of the way, we can now proceed to the core of the attack. The first step is creating our server.
 
-We’ll implement the server using Python, and the following modules are required:
+We'll implement the server using Python, and the following modules are required:
 
 ```
 rich
@@ -61,7 +61,7 @@ sudo apt install python3-pypykatz
 
 The full server source code is provided below. Inline comments explain each part of the implementation in detail:
 
-```
+```python
 import http.server
 import socketserver
 import os
@@ -259,7 +259,7 @@ with socketserver.TCPServer((IP, PORT), UploadHandler) as server:
         server.server_close()
 ```
 
-At this point, we’ll begin developing the Raspberry Pi Pico payload:
+At this point, we'll begin developing the Raspberry Pi Pico payload:
 
 ```
 REM --------------------------------------------------
@@ -339,14 +339,14 @@ The payload is saved as `payload.dd` because of how **Rubber Ducky–style firmw
 
 **The short, real reason**
 
-When you flash **DuckyScript-compatible firmware** (like Pico Duck, Pico-Ducky, or similar) onto the Raspberry Pi Pico, the firmware is **hardcoded to look for a file named** `**payload.dd**` on the device’s storage.
-If that file doesn’t exist—or is named differently—the payload simply **won’t execute**.
+When you flash **DuckyScript-compatible firmware** (like Pico Duck, Pico-Ducky, or similar) onto the Raspberry Pi Pico, the firmware is **hardcoded to look for a file named** `payload.dd` on the device's storage.
+If that file doesn't exist—or is named differently—the payload simply **won't execute**.
 
-What **.dd** actually means
+**What `.dd` actually means**
 
-*   `.dd` stands for **DuckyScript**
-*   It’s not a real programming language extension in the traditional sense
-*   It’s a **convention enforced by the firmware**, not by the OS.
+- `.dd` stands for **DuckyScript**
+- It's not a real programming language extension in the traditional sense
+- It's a **convention enforced by the firmware**, not by the OS.
 
 The firmware does something conceptually like this on boot:
 
@@ -364,15 +364,15 @@ We begin by configuring the attacker environment. Make sure all previously menti
 
 ![captionless image](https://miro.medium.com/v2/resize:fit:1248/format:webp/1*eF6SA2f8TIBE38fj8RhQ_A.png)
 
-With the server now up and running, it’s time to connect our DIY USB Rubber Ducky and let it do its thing — extracting and dumping those hashes.
+With the server now up and running, it's time to connect our DIY USB Rubber Ducky and let it do its thing — extracting and dumping those hashes.
 
 The following steps outline what happens when the USB device is plugged into the PC:
 
 ![captionless image](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*lsZ-TQPPT3fIT08V__ZIbQ.gif)
 
-In just a matter of seconds, we managed to pull the hashes successfully, proof of the Rubber Ducky’s raw power.
+In just a matter of seconds, we managed to pull the hashes successfully, proof of the Rubber Ducky's raw power.
 
-![Now that I have the NT hash, I can use it to login as Lebron using Evil-WinRM:>](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*N-GQsUFTdD9sdi44ohWlKQ.png)
+![Now that I have the NT hash, I can use it to login as Lebron using Evil-WinRM](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*N-GQsUFTdD9sdi44ohWlKQ.png)
 
 To better understand how the server operates and how it interacts with the Raspberry Pi Pico payload, the entire process can be broken down into a simple, linear flow. The goal of the server is to **receive dumped registry hives, process them automatically, and extract NTLM hashes without manual intervention.**
 
@@ -430,7 +430,7 @@ To better understand how the server operates and how it interacts with the Raspb
 └──────────────────────┘
 ```
 
-**Mitigations and Defensive Measures**
+## Mitigations and Defensive Measures
 
 Now that you see how fast and dangerous it is, what are the ways to avoid it? Simple — **never trust USBs**. Treat every unknown or unattended USB device as potentially malicious, no matter how harmless it looks.
 
@@ -444,6 +444,6 @@ Fourth, **monitor unusual behavior**. Rapid command execution, sudden PowerShell
 
 Lastly, **user awareness matters**. Technical defenses help, but human curiosity is still the weakest link. Training users to avoid plugging in unknown USB devices — especially those found in public or shared spaces — can stop the attack before it even begins.
 
-In short: if you didn’t buy it, request it, or verify it — **don’t plug it in**. One careless USB insertion is all it takes.
+In short: if you didn't buy it, request it, or verify it — **don't plug it in**. One careless USB insertion is all it takes.
 
-That’s a wrap for today! I hope you picked up something new and useful from this writeup. Stay curious, stay safe, and always take care in the digital world — your attention is your best defense.^^
+That's a wrap for today! I hope you picked up something new and useful from this writeup. Stay curious, stay safe, and always take care in the digital world — your attention is your best defense.
