@@ -1,3 +1,11 @@
+---
+title: Overflow The Jackpot CTF
+date: 08-05-2026
+excerpt: TryHackMe Writeup
+cover: ../uploads/cover_overflow.jpg
+tags: XOR Decryption, AES, Splunk, CVE-2026-63030, Reverse Engineering
+---
+
 # Overflow: The Jackpot — DEF CON 34 CTF Writeup
 
 Welcome back to another CTF writeup! This time I'm covering **Overflow: The Jackpot**, a special Capture The Flag event hosted by TryHackMe as part of the **DEF CON 34** season. DEF CON is one of the world's largest and most influential cybersecurity conferences, bringing together researchers, hackers, pentesters, students, and enthusiasts to compete, learn, and collaborate.
