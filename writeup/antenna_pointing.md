@@ -3,7 +3,7 @@ title: "Antenna Pointing"
 date: 08-28-2026
 excerpt: 'Hack The Box CTF: Satellite Category'
 cover: ../uploads/cover_antenna.jpg
-tags: [SGP4 Orbital Propagation, Topocentric Coordinate Transformation, Binary Search Refinement]
+tags: SGP4 Orbital Propagation, Topocentric Coordinate Transformation, Binary Search Refinement
 ---
 
 Welcome back to another writeup! Hack The Box recently introduced a brand-new category to their CTF challenges: **Satellite**! This is one of the most interesting categories I've encountered so far because, instead of dealing with the usual web applications, binaries, networks, or cryptography, we're now dealing with **satellite communications, orbital mechanics, TLEs, ground stations, and antenna tracking**.
