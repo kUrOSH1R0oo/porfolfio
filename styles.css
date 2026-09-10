@@ -418,6 +418,7 @@ h2::after {
     text-align: left;
     backdrop-filter: blur(6px);
     transition: border-color 0.25s var(--ease), transform 0.25s var(--ease);
+    margin: 0 auto;
 }
 
 .skill-category:hover,
