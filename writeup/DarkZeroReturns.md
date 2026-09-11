@@ -1,3 +1,10 @@
+---
+title: DarkZeroReturns
+date: 2026-09-12
+excerpt: HackTheBox - Hard
+cover: ../uploads/cover_darkzeroreturns.jpg
+tags: CVE-2026-33937, AST Injection, SID History Injection, SEBackupPrivilege
+---
 
 Welcome to another Hack The Box writeup. This time we're tackling **DarkZeroReturns**, one of the machines from **Hack The Box Season 11**. This guide walks through the entire attack path step by step — from the first scans all the way to full domain compromise — and tries to explain not just *what* was run, but *why* each step made sense given what we'd found so far.
 
