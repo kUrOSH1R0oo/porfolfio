@@ -64,7 +64,7 @@ With only the web service left to investigate, that's where we go next.
 
 Let's visit the webpage:
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2F8N7CjVKdHR6KmWh1Rits%2FScreenshot%20(3344).png?alt=media&amp;token=023f8992-0c5f-4fa6-95b0-a52082616c77" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F8N7CjVKdHR6KmWh1Rits%252FScreenshot%2520%283344%29.png%3Falt%3Dmedia%26token%3D023f8992-0c5f-4fa6-95b0-a52082616c77&width=768&dpr=3&quality=100&sign=2b795a7ee072184a24ea173d08b16a6b&sv=3)
 
 This lands us on what looks like a lightweight internal dashboard/landing page for something called "Nimbus" — branding and layout suggest a small internal tool for managing background jobs rather than a public-facing product. There's no obvious content on the homepage itself, so the next logical move is to see what other pages and endpoints exist underneath it.
 
@@ -147,7 +147,7 @@ This is a huge find. The application tells us, in plain JSON, that its **queue**
 
 Let's visit it:
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2FkbGunPDhiIhFWvJ3kGV5%2FScreenshot%20(3346).png?alt=media&amp;token=e28b5584-586b-4769-a985-d85495a2cc7f" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FkbGunPDhiIhFWvJ3kGV5%252FScreenshot%2520%283346%29.png%3Falt%3Dmedia%26token%3De28b5584-586b-4769-a985-d85495a2cc7f&width=768&dpr=3&quality=100&sign=d8e7050a1b6109226aa4ac162619ca3c&sv=3)
 
 This confirms the theory — `aws.nimbus.htb` responds with the kind of bare, machine-readable output typical of a cloud-service emulator's root endpoint (no styled UI, just a service banner), rather than anything resembling the main `nimbus.htb` web app. We now know there are effectively **two attack surfaces**: the front-end web app, and an internal "AWS" API layer that the web app talks to on our behalf.
 
@@ -155,7 +155,7 @@ This confirms the theory — `aws.nimbus.htb` responds with the kind of bare, ma
 
 Going back to the `405` we saw earlier, we intercept the page in Burp Suite and figure out what parameters `/jobs/preview` actually expects:
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2FogsRy7QgrcL9jdcFyMCd%2FScreenshot%20(3347).png?alt=media&amp;token=06dfc197-78b5-4cce-9bbe-9b489a54dd3a" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FogsRy7QgrcL9jdcFyMCd%252FScreenshot%2520%283347%29.png%3Falt%3Dmedia%26token%3D06dfc197-78b5-4cce-9bbe-9b489a54dd3a&width=768&dpr=3&quality=100&sign=9a78c86b660ad8dd9dffeea42c38ea8c&sv=3)
 
 The intercepted request shows that `/jobs/preview` accepts a POST body containing an XML document — presumably a "job definition" that the backend parses and renders a preview of before the job is actually scheduled. Any endpoint that parses attacker-supplied XML is an immediate candidate for **XXE (XML External Entity) injection**, so that's the first thing to test:
 
@@ -169,7 +169,7 @@ The intercepted request shows that `/jobs/preview` accepts a POST body containin
 
 The idea here is simple: if the XML parser resolves external entities, defining one that points at a local file (`file:///etc/passwd`) should cause the contents of that file to be echoed back into the rendered preview.
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2FlQcq4suIEfTGW2HsTXEE%2FScreenshot%2520%283348%29.png?alt=media&amp;token=0c2a556e-aba6-4e14-965b-b067878d8f60" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FlQcq4suIEfTGW2HsTXEE%252FScreenshot%2520%283348%29.png%3Falt%3Dmedia%26token%3D0c2a556e-aba6-4e14-965b-b067878d8f60&width=768&dpr=3&quality=100&sign=a98d1d1088589abcb2f829469d207dd6&sv=3)
 
 **But it's just rendering** — the entity isn't expanded, and the raw text comes back unchanged. This tells us the parser is either configured with external-entity resolution disabled, or the `SYSTEM` (local file) scheme specifically is blocked. That doesn't mean the underlying vulnerability class is dead, though — XXE parsers that block local `file://` access will frequently still allow **outbound HTTP** requests through an entity, which is functionally a **Server-Side Request Forgery (SSRF)**. So the plan shifts: instead of trying to read local files, we use the same entity mechanism (or the same server-side "preview/fetch" logic) to make the *server itself* issue an HTTP request to a target of our choosing.
 
@@ -183,7 +183,7 @@ If our SSRF can reach that address from the server's perspective, we can potenti
 http://169.254.169.254/lala.yml
 ```
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2F7v7KdsXo4AjqRwo0m1HV%2FScreenshot%2520%283349%29.png?alt=media&amp;token=a9ca3b3e-51d7-418f-8338-d789f165234e" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252F7v7KdsXo4AjqRwo0m1HV%252FScreenshot%2520%283349%29.png%3Falt%3Dmedia%26token%3Da9ca3b3e-51d7-418f-8338-d789f165234e&width=768&dpr=3&quality=100&sign=f87eb6bdb7ff330a27c07f268349f51a&sv=3)
 
 **But blocked.** The literal string `169.254.169.254` is almost certainly being caught by an input filter or blocklist on the server side (a very common, and very weak, SSRF mitigation).
 
@@ -208,7 +208,7 @@ A leading `0` on a numeric group tells many parsers "interpret this as octal," a
 http://0251.0376.0251.0376/latest/meta-data/iam/security-credentials/?.yml
 ```
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2FD8Rmwjb4JtBZzyeW9FxS%2FScreenshot%2520%283350%29.png?alt=media&amp;token=0d40f65d-ee12-4208-8c73-60599a3f35d8" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FD8Rmwjb4JtBZzyeW9FxS%252FScreenshot%2520%283350%29.png%3Falt%3Dmedia%26token%3D0d40f65d-ee12-4208-8c73-60599a3f35d8&width=768&dpr=3&quality=100&sign=f536c74a519d1f2561ffecee8d9d6993&sv=3)
 
 **It works!** The (harmless-looking, filter-friendly) `.yml` suffix appended to the URL is just there to make the request look like a legitimate file fetch to any content-type sniffing the app might do — the metadata service itself ignores it and answers based on the path. The response reveals an IAM role name attached to this instance: **`nimbus-web-role`**.
 
@@ -220,7 +220,7 @@ Knowing the role name, IMDSv1 lets us fetch its live credentials directly, no ex
 http://0251.0376.0251.0376/latest/meta-data/iam/security-credentials/nimbus-web-role#.yaml
 ```
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2FufHjHDEyys9wzJgYL5Wx%2FScreenshot%2520%283351%29.png?alt=media&amp;token=e8c59f1e-d55c-497a-876c-e3a0dbb4df4c" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FufHjHDEyys9wzJgYL5Wx%252FScreenshot%2520%283351%29.png%3Falt%3Dmedia%26token%3De8c59f1e-d55c-497a-876c-e3a0dbb4df4c&width=768&dpr=3&quality=100&sign=6aed7d53e4f7c1205c369707dc9126bf&sv=3)
 
 **It works!**
 
@@ -328,18 +328,18 @@ Let's grab the user flag:
 ```shell
 worker@92707fe1a7e4:~$ cat user.txt
 cat user.txt
-27bf3f1fa4247b57d56517cc020fe1f6
+[REDACTED]
 ```
 
 ## Phase 7: Post-Exploitation — Enumerating the Worker Container
 
 With a foothold as `worker`, it's time to look for anything that helps us escalate — environment variables, mounted secrets, or leftover configuration. Rather than manually poking around, we run **linpeas.sh**, which automates the search for common privilege-escalation vectors (SUID binaries, writable cron jobs, exposed credentials, capabilities, etc.):
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2FgWjNAAlrnsLZFKNC8BUN%2FScreenshot%2520%283355%29.png?alt=media&amp;token=12a5e3b9-8624-40ba-a808-df0a26d8d320" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FgWjNAAlrnsLZFKNC8BUN%252FScreenshot%2520%283355%29.png%3Falt%3Dmedia%26token%3D12a5e3b9-8624-40ba-a808-df0a26d8d320&width=768&dpr=3&quality=100&sign=ed9b9a57378f2653979e3709409da20d&sv=3)
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2FF6fw3KFuJHWrYMbeU3NS%2FScreenshot%2520%283354%29.png?alt=media&amp;token=449c7be4-09b1-46ca-97c0-a03df71464ab" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FF6fw3KFuJHWrYMbeU3NS%252FScreenshot%2520%283354%29.png%3Falt%3Dmedia%26token%3D449c7be4-09b1-46ca-97c0-a03df71464ab&width=768&dpr=3&quality=100&sign=946768118ce0cd72cc85cd76801e9130&sv=3)
 
-<figure><img src="https://271954773-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYsivTjPn2jLXI0ZgVqeF%2Fuploads%2Frr4bGO5WXzem510XOBZB%2FScreenshot%2520%283353%29.png?alt=media&amp;token=80e277bf-464f-48af-a5a2-75a5f4cf14f4" alt=""><figcaption></figcaption></figure>
+![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252Frr4bGO5WXzem510XOBZB%252FScreenshot%2520%283353%29.png%3Falt%3Dmedia%26token%3D80e277bf-464f-48af-a5a2-75a5f4cf14f4&width=768&dpr=3&quality=100&sign=1fd428ddb9f971cfc224f6d7e44d7a77&sv=3)
 
 The "juicy info" linpeas flags here revolves around the container's environment: **hardcoded placeholder AWS credentials** (`AWS_ACCESS_KEY_ID=test` / `AWS_SECRET_ACCESS_KEY=test`), an `AWS_ENDPOINT_URL` pointing at `http://floci:4566` (the same internal emulator hostname we discovered earlier via the SQS queue URL), and references to a **CodeBuild** service role ARN. This matters because `floci`, like LocalStack, typically accepts *any* non-empty string as a valid access key/secret when running in local/test mode — real authentication isn't enforced. In other words, whoever set up this environment left a **fully-usable, unauthenticated path straight into the emulator's AWS CodeBuild API**, reachable from inside this container using nothing but dummy credentials.
 
