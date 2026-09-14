@@ -1,9 +1,9 @@
 ---
 title: Nimbus
-date: 2026-09-13
-excerpt: HackTheBox - Season 11
+date: 2026-09-14
+excerpt: HackTheBox
 cover: ../uploads/cover_nimbus.jpg
-tags: SSRF, XXE, AWS IMDS Credential Theft, Octal IP Obfuscation, YAML Deserialization RCE, Privileged Container Escape, OverlayFS core_pattern Abuse
+tags: SSRF, XXE, AWS IMDS Credential Theft, YAML Deserialization RCE, Privileged Container Escape, OverlayFS core_pattern Abuse
 ---
 
 Welcome to another Hack The Box writeup. This time we're tackling **Nimbus**, one of the machines from **Hack The Box Season 11**. This box is a great example of a "cloud-native" attack path — instead of the usual Active Directory or classic Linux privesc chain, almost every step here revolves around AWS-style services (SQS, IAM, CodeBuild) that have been re-implemented locally by the target for testing purposes.
