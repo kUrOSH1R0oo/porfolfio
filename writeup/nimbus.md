@@ -1,7 +1,7 @@
 ---
 title: Nimbus
 date: 2026-09-14
-excerpt: HackTheBox
+excerpt: HackTheBox - Hard
 cover: ../uploads/cover_nimbus.jpg
 tags: SSRF, XXE, AWS IMDS Credential Theft, YAML Deserialization RCE, Privileged Container Escape, OverlayFS core_pattern Abuse
 ---
