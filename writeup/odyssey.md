@@ -3,7 +3,7 @@ title: Odyssey
 date: 2026-09-17
 excerpt: HackTheBox - Insane
 cover: ../uploads/cover_odyssey.jpg
-tags: NoSQL Aggregation Pipeline Injection, Arbitrary File Read via Prototype Pollution, BULK INSERT Query Coercion, AddKeyCredentialLink Abuse, YAML Deserialization RCE, DCSync 
+tags: NoSQL Aggregation Pipeline Injection, Arbitrary File Read via Prototype Pollution, BULK INSERT Query Coercion, YAML Deserialization RCE 
 ---
 
 Today, I’ll be walking through my complete approach to **Odyssey**, an **Insane-rated Windows machine** on Hack The Box. Odyssey was one of the most challenging machines I have personally worked on, not because of a single extremely difficult vulnerability, but because of how many different techniques had to be chained together to reach the final objective.
@@ -30,7 +30,8 @@ Because of this, Odyssey felt less like solving a single vulnerability and more 
 
 In this writeup, I'll document the attack path step by step, including the enumeration, the reasoning behind each decision, the commands used, important findings, failed approaches where relevant, and how the different vulnerabilities and credentials were chained together to eventually compromise the environment.
 
-# Web Enumeration
+# Enumeration
+## Web Enumeration
 
 With that said, let's begin with **enumeration**.
 
@@ -400,7 +401,7 @@ The request uses the `$facet` stage to create a separate pipeline, where `$looku
 
 The response confirms that the technique worked. We can now see documents from `pending_invites`, including the `operator_id`, assigned `role`, invitation `token`, issuer, expiration date, and whether the invitation has already been redeemed. Most importantly, the `redeemed` field is set to `false`, indicating that the discovered invitation is still active and has not yet been consumed. This gives us a potentially valid invitation token that can be investigated further as part of the application's onboarding process.
 
-# WebAuthn Synthetic Registration and userHandle Confusion
+## WebAuthn Synthetic Registration and userHandle Confusion
 
 With a valid invitation token now identified, we can proceed to the next stage of the attack. The token can be supplied to the application's `/onboard` endpoint to attempt registering a new user and gain access to the authenticated portion of the application.
 
@@ -837,7 +838,7 @@ After obtaining the session cookie, we can import it into our browser and use it
 
 ![](https://kur0sh1r0.gitbook.io/ctf-writeups/~gitbook/image?url=https%3A%2F%2F271954773-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FYsivTjPn2jLXI0ZgVqeF%252Fuploads%252FOgF4LANsOx9k3q5mYVyb%252FScreenshot%2520%283376%29.png%3Falt%3Dmedia%26token%3D88e875e3-4a3f-4e44-8256-41ad3526cd0b&width=768&dpr=3&quality=100&sign=e107c82750106880d71da8a8fc7e5936&sv=3)
 
-# Prototype Pollution–Based Raw-Block File Read
+## Prototype Pollution–Based Raw-Block File Read
 
 After gaining access to the admin dashboard, we can review the different sections available to our account. Most of the panels, including the **Operator Roster** and **Authorization Queue**, do not reveal anything immediately useful for further exploitation. The **Notice Templates** section, however, looks more promising from an enumeration perspective, so we focus our attention there. Opening one of the existing templates allows us to inspect its contents and determine whether the editing functionality exposes anything interesting.
 
@@ -3230,7 +3231,7 @@ icacls.exe : .: Access is denied.
       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
 ```
 
-# Obtaining Domain Administrator Access Through DCSync
+## Obtaining Domain Administrator Access Through DCSync
 The resulting base64 Kirbi ticket was extracted from the log file, converted to ccache format, and used to perform a DCSync attack:
 
 ```shell
