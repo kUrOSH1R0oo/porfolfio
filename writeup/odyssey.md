@@ -1,4 +1,10 @@
-Welcome back to another Hack The Box writeup!
+---
+title: Odyssey
+date: 2026-09-17
+excerpt: HackTheBox - Insane
+cover: ../uploads/cover_odyssey.jpg
+tags: NoSQL Aggregation Pipeline Injection, Arbitrary File Read via Prototype Pollution, BULK INSERT Query Coercion, AddKeyCredentialLink Abuse, YAML Deserialization RCE, DCSync 
+---
 
 Today, I’ll be walking through my complete approach to **Odyssey**, an **Insane-rated Windows machine** on Hack The Box. Odyssey was one of the most challenging machines I have personally worked on, not because of a single extremely difficult vulnerability, but because of how many different techniques had to be chained together to reach the final objective.
 
