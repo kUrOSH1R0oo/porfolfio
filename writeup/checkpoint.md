@@ -1,4 +1,10 @@
-
+---
+title: CheckPoint
+date: 2026-09-18
+excerpt: HackTheBox - Medium
+cover: ../uploads/cover_checkpoint.jpg
+tags: Supply Chain Attack, BadSuccessor, VM Memory Forensics
+---
 
 Welcome to another Hack The Box writeup. This time we're tackling **CheckPoint**, an Active Directory box that starts with a set of *handed-to-you* credentials and turns into a long chain of AD misconfigurations: broken object permissions, an AD Recycle Bin abuse, a supply-chain-style attack against a VS Code extension share, a clever Kerberos delegation trick to steal a ticket without touching LSASS, and finally an abuse of Windows Server 2025's brand-new **delegated Managed Service Account (dMSA)** feature — the technique nicknamed **BadSuccessor**. The box wraps up with old-school VM memory forensics to recover the domain Administrator's NT hash.
 
