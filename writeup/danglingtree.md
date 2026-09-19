@@ -1,10 +1,10 @@
-# HackTheBox DanglingTree — Writeup
-
 Welcome to another Hack The Box writeup. This time we're tackling **DanglingTree**, a Windows Active Directory box. Like the DarkZeroReturns breakdown, the goal here isn't just to list the commands that got us to `root.txt` — it's to actually slow down and explain *why* each command was run, what the output meant, and how one small discovery kept opening the door to the next one.
 
 This box in particular is a great teaching example because almost nothing here is a single "smash the front door" vulnerability. Instead it's a long chain of small, realistic misconfigurations — a leaked document, a management console that does exactly what it's supposed to do, a password-reset endpoint that only trusts the network it's bound to, a home-grown encryption scheme with hardcoded keys, and finally a full Active Directory Certificate Services (ADCS) escalation built from scratch. Every one of these individually looks minor. Chained together, they hand over the entire domain.
 
 Let's get started.
+
+## Part I — External Recon and Initial Foothold
 
 ### Phase 1: Reconnaissance
 
@@ -480,6 +480,8 @@ Active Connections
 
 Most of this is completely mundane — it's just the DC talking to itself over its link-local IPv6 addresses on LDAP (`389`), which is normal background AD chatter (replication, service binds, and so on) and not something we caused. The two lines that *do* matter are the top two: our own inbound WAC connection on `6600` and our new reverse shell callback on `1234`. Nothing here suggests another live pivot target yet — this box appears to be the only externally reachable node, so the next step is to see what else lives *behind* it on whatever internal network it's connected to.
 
+## Part II — Pivoting and the Mail Server
+
 ### Phase 6: Pivoting Into the Internal Network with Ligolo-ng
 
 Just like in the DarkZeroReturns box, we bring up a **Ligolo-ng** tunnel: a TUN-interface-based Layer 3 pivot that lets our attack machine treat the compromised host's network as if we had a network card plugged directly into it.
@@ -810,6 +812,8 @@ Microsoft Windows [Version 10.0.26100.33158]
 C:\Windows\System32>
 ```
 
+## Part III — Domain Enumeration and Lateral Movement
+
 ### Phase 11: Mapping the Domain with RustHound-CE and BloodHound
 
 We now have a genuine, ordinary domain user account (`noah.b`) with a normal Kerberos identity — the perfect vantage point to collect a full picture of the domain's users, groups, and permission relationships. Instead of SharpHound (which needs to run *on* a Windows host), we use **RustHound-CE**, a Rust reimplementation of the same collector that runs natively from our Linux attack box over LDAP/LDAPS:
@@ -1038,6 +1042,8 @@ That confirms it: the account BloodHound pointed us at is `jake.h`. Let's verify
 SMB         10.129.47.118   445    DC               [*] Windows 11 / Server 2025 Build 26100 x64 (name:DC) (domain:danglingtree.htb) (signing:True) (SMBv1:None) (Null Auth:True)
 SMB         10.129.47.118   445    DC               [+] danglingtree.htb\JAKE.H:Password123! 
 ```
+
+## Part IV — ADCS Exploitation and Domain Compromise
 
 ### Phase 13: ADCS Enumeration — Spotting ESC7
 
@@ -1599,5 +1605,7 @@ Full domain compromise, confirmed: `danglingtree\administrator`, reached without
 PS C:\> cat C:\Users\Administrator\Desktop\root.txt
 [REDACTED]
 ```
+
+## Conclusion
 
 And that's the box — full compromise achieved, starting from an unauthenticated file share all the way through a leaked Rules-of-Engagement PDF, RID cycling around a locked-down account, a Windows Admin Center RCE that required no exploit at all, a loopback-trust bypass via Ligolo-ng, homegrown DES encryption with hardcoded keys, a BloodHound-revealed ACL chain, and a from-scratch ADCS ESC1 template built entirely over raw LDAP. A great reminder that "no single critical vulnerability" doesn't mean "no path to Domain Admin" — sometimes it just means the path is built out of five or six things nobody thought were dangerous on their own.
