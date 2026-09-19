@@ -1,3 +1,11 @@
+---
+title: DanglingTree
+date: 2026-09-20
+excerpt: HackTheBox - Medium
+cover: ../uploads/cover_danglingtree.jpg
+tags: ADCS Exploitation, ESC7, Malicious Certificate Template
+---
+
 Welcome to another Hack The Box writeup. This time we're tackling **DanglingTree**, a Windows Active Directory box. Like the DarkZeroReturns breakdown, the goal here isn't just to list the commands that got us to `root.txt` — it's to actually slow down and explain *why* each command was run, what the output meant, and how one small discovery kept opening the door to the next one.
 
 This box in particular is a great teaching example because almost nothing here is a single "smash the front door" vulnerability. Instead it's a long chain of small, realistic misconfigurations — a leaked document, a management console that does exactly what it's supposed to do, a password-reset endpoint that only trusts the network it's bound to, a home-grown encryption scheme with hardcoded keys, and finally a full Active Directory Certificate Services (ADCS) escalation built from scratch. Every one of these individually looks minor. Chained together, they hand over the entire domain.
