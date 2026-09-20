@@ -3,7 +3,7 @@ title: Remit
 date: 2026-09-20
 excerpt: Webverse Pro - Master
 cover: ../uploads/cover_remit.jpg
-tags: CVE-2026-27944, CVE-2026-3888
+tags: OOB XXE + external DTDs, UTF-16 filter bypass, OOXML, Mass assignment, PHP object injection / POP chains
 ---
 
 Welcome back to another writeup! Today, I'll be walking through how I solved **Remit** from **WebVerse Pro**. Remit is classified as a **Master Difficulty** challenge, which is essentially the WebVerse equivalent of an *Insane* machine. This lab is packed with advanced web application exploitation concepts and requires chaining multiple vulnerabilities together to achieve full compromise.
