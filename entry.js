@@ -1,4 +1,13 @@
 (function () {
+    if (window.mermaid) {
+        window.mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            securityLevel: 'strict',
+            fontFamily: 'var(--font-mono)'
+        });
+    }
+
     const SOURCES = {
         writeup: { folder: 'writeup', listPage: 'writeups.html', listLabel: 'Write-Ups' },
         blog: { folder: 'blog', listPage: 'blog.html', listLabel: 'Blog' }
@@ -94,6 +103,52 @@
                 return `<span class="math-error">${escapeHtml(item.expr)}</span>`;
             }
         });
+    }
+
+    // --- Mermaid diagram support ----------------------------------
+    // ```mermaid fenced blocks would otherwise be handed to marked's
+    // normal code-block renderer and syntax-highlighted as plain text,
+    // so they're pulled out into placeholders *before* marked.parse
+    // runs, then swapped back in as <pre class="mermaid"> blocks
+    // *after* marked.parse runs (right before DOMPurify sanitizes the
+    // final markup). Mermaid itself renders those blocks into SVG
+    // afterwards, once the sanitized HTML is in the DOM.
+
+    function protectMermaid(raw) {
+        const store = [];
+        const text = raw.replace(/```mermaid\r?\n([\s\S]*?)```/g, (_, code) => {
+            const idx = store.length;
+            store.push(code.replace(/\r\n/g, '\n'));
+            return `\u0000MERMAID${idx}\u0000`;
+        });
+        return { text, store };
+    }
+
+    function renderMermaidPlaceholders(html, store) {
+        return html.replace(
+            /<p>\u0000MERMAID(\d+)\u0000<\/p>|\u0000MERMAID(\d+)\u0000/g,
+            (full, idxA, idxB) => {
+                const idx = idxA !== undefined ? idxA : idxB;
+                const code = store[Number(idx)];
+                if (code === undefined) return full;
+                return `<pre class="mermaid">${escapeHtml(code)}</pre>`;
+            }
+        );
+    }
+
+    async function renderMermaidDiagrams() {
+        if (!window.mermaid || !els.body) return;
+        const nodes = els.body.querySelectorAll('pre.mermaid');
+        if (!nodes.length) return;
+        try {
+            await window.mermaid.run({ nodes: Array.from(nodes) });
+        } catch (err) {
+            nodes.forEach((node) => {
+                if (!node.getAttribute('data-processed')) {
+                    node.innerHTML = `<span class="math-error">Mermaid render error: ${escapeHtml(err.message || String(err))}</span>`;
+                }
+            });
+        }
     }
 
     function showError(message) {
@@ -230,15 +285,18 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const raw = await res.text();
             const body = stripFrontMatter(raw);
-            const { text: bodyWithPlaceholders, store: mathStore } = protectMathOutsideCode(body);
+            const { text: bodyWithoutMermaid, store: mermaidStore } = protectMermaid(body);
+            const { text: bodyWithPlaceholders, store: mathStore } = protectMathOutsideCode(bodyWithoutMermaid);
             let html = window.marked ? window.marked.parse(bodyWithPlaceholders) : escapeHtml(bodyWithPlaceholders);
             html = renderMathPlaceholders(html, mathStore);
+            html = renderMermaidPlaceholders(html, mermaidStore);
             if (els.body) {
                 els.body.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(html) : html;
             }
             highlightCode();
             buildToc();
             initProgressBar();
+            await renderMermaidDiagrams();
         } catch (err) {
             showError(`Couldn't load this entry (${err.message}).`);
         }
