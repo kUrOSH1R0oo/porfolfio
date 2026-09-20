@@ -1400,6 +1400,17 @@ footer {
     background: none !important;
 }
 
+.entry-body pre.mermaid {
+    display: flex;
+    justify-content: center;
+    background: var(--panel-solid, #0a0f0d);
+}
+
+.entry-body pre.mermaid svg {
+    max-width: 100%;
+    height: auto;
+}
+
 /* KaTeX: block math scrolls horizontally instead of overflowing the
    article column; inline math is allowed to shrink/wrap so long
    expressions in a normal paragraph don't blow out the layout. */
