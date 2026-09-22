@@ -290,7 +290,7 @@ flowchart TB
 
 The blacklist checks *bytes*; the parser understands *characters*. UTF-16 changes the byte layout without changing what the XML means — that gap is the entire bypass.
 
-> #### 🎓 Concept deep dive: bytes vs. characters, and why encoding is a security boundary
+> #### Concept deep dive: bytes vs. characters, and why encoding is a security boundary
 >
 > This is one of the most important, most underrated ideas in web security: **text is not bytes**. A human reading `<!DOCTYPE` sees eight specific characters. A computer reading a file sees a sequence of bytes that get *interpreted* according to a character encoding — UTF-8, UTF-16, Latin-1, and dozens of others. The same eight characters can be represented by completely different byte sequences depending on which encoding is in play:
 >
