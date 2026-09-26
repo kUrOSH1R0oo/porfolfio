@@ -3,7 +3,7 @@ title: HSM Defense
 date: 2026-09-26
 excerpt: HackSmarter - Hard
 cover: ../uploads/cover_hsmdefense.jpg
-tags: Supply Chain Attack, BadSuccessor, VM Memory Forensics
+tags: Timeroasting, Targeted Kerberoasting, Resource-Based Constrained Delegation (RBCD), DCSync
 ---
 
 Welcome back to another writeup! In this walkthrough, I'll be demonstrating how I successfully compromised the **HSM Defense Lab** from **HackSmarter**, an **Active Directory Hard**-rated challenge designed to test enumeration, privilege escalation, lateral movement, and domain compromise skills.
