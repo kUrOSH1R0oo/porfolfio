@@ -1,6 +1,10 @@
-> For the complete documentation index, see [llms.txt](https://kur0sh1r0.gitbook.io/ctf-writeups/llms.txt). Markdown versions of documentation pages are available by appending `.md` to page URLs; this page is available as [Markdown](https://kur0sh1r0.gitbook.io/ctf-writeups/hacksmarter/hacksmarter-hsm-defense-writeup.md).
-
-# HackSmarter HSM Defense - Writeup
+---
+title: HSM Defense
+date: 2026-09-26
+excerpt: HackSmarter - Hard
+cover: ../uploads/cover_hsmdefense.jpg
+tags: Supply Chain Attack, BadSuccessor, VM Memory Forensics
+---
 
 Welcome back to another writeup! In this walkthrough, I'll be demonstrating how I successfully compromised the **HSM Defense Lab** from **HackSmarter**, an **Active Directory Hard**-rated challenge designed to test enumeration, privilege escalation, lateral movement, and domain compromise skills.
 
