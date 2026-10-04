@@ -1,3 +1,10 @@
+---
+title: Eloquia
+date: 2026-10-04
+excerpt: HackTheBox - Insane
+cover: ../uploads/cover_eloquia.jpg
+tags: OAUTH CSRF, SQL Explorer RCE, DLL-Based Exploitation, Edge Password Decrypting (DPAPI), Race Condition on Failure2Ban
+---
 
 Welcome back to another Hack The Box writeup. In this walkthrough, we'll be taking a deep dive into **Eloquia**, an **Insane-difficulty Windows machine** that challenges players to think beyond individual vulnerabilities and focus on how seemingly minor weaknesses can be chained together into a complete system compromise.
 
