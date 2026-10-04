@@ -679,7 +679,7 @@ SELECT load_extension('C:\Web\Eloquia\static\assets\images\blog\user_flag.dll', 
 ```shell
 ┌──(kuroshiro㉿a1sberg)-[~/HTB/Eloquia]
 └─$ curl http://eloquia.htb/static/assets/images/blog/flag.txt
-7fd17a2ae9b78abb8a4be2d35287063b
+[REDACTED]
 ```
 
 **User flag captured.** Note the repeatable pattern that's now established and will be reused throughout the rest of the engagement: **write a tiny, single-purpose C "payload" → cross-compile it into a DLL with `x86_64-w64-mingw32-gcc` → upload it through the article banner form → load it via SQL Explorer → read the result back over HTTP.** This is effectively a slow, file-based "pseudo-shell" — every command requires a fresh compile/upload/load/curl cycle rather than giving us an interactive terminal, which is an important limitation to keep in mind for the next phase.
@@ -2940,7 +2940,7 @@ Mode                LastWriteTime         Length Name
 
 ```powershell
 *Evil-WinRM* PS C:\temp> cat root.txt
-9e7840678da59dd432d4092e857c7785
+[REDACTED]
 ```
 
 **Root flag captured.** Full SYSTEM-equivalent file access was achieved not through a memory-corruption exploit or a kernel bug, but purely through a **logic flaw in how a custom service was operated** — an undocumented restart cadence, combined with a writable binary path and no integrity verification (code signing, hash checking, or file-ACL hardening) on that path.
