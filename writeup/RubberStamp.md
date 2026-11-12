@@ -1,4 +1,10 @@
-# TryHackMe Rubber Stamp — Full Writeup
+---
+title: "Rubber Stamp"
+date: 11-12-2026
+excerpt: TryHackMe Writeup
+cover: ../uploads/cover_rubbers.jpg
+tags: .NET Deserialization, ADCS, ESC1
+---
 
 Welcome back to my writeup! It's been a while since my last one. Today I'll walk through **Rubber Stamp**, a TryHackMe Active Directory "Boot2Root" machine. This box is a great example of how a single forgotten backup file on a web server can cascade all the way into full **Domain Administrator** compromise. Along the way we'll touch on ASP.NET Web Forms internals, ViewState deserialization, Windows reverse shells, Active Directory enumeration, and Active Directory Certificate Services (ADCS) abuse — specifically the infamous **ESC1** misconfiguration.
 
